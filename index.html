@@ -380,6 +380,90 @@
     color: var(--muted);
     line-height: 1.6;
   }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal-box {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 340px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+
+  .modal-input {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 14px;
+    min-height: 50px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    width: 100%;
+  }
+
+  .modal-error {
+    display: none;
+    color: var(--accent-dark);
+    font-size: 13.5px;
+    margin-top: 10px;
+  }
+
+  .modal-error.visible {
+    display: block;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  button.modal-cancel,
+  button.modal-confirm {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px;
+    min-height: 46px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex: 1;
+  }
+
+  button.modal-cancel {
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+  }
+
+  button.modal-confirm {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+  }
 </style>
 </head>
 <body>
@@ -506,6 +590,18 @@
   </footer>
 </div>
 
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">Enter password to close orders</div>
+    <input type="password" id="modalPasswordInput" class="modal-input" placeholder="Password">
+    <div class="modal-error" id="modalError">Incorrect password.</div>
+    <div class="modal-buttons">
+      <button class="modal-cancel" onclick="closePasswordModal()">Cancel</button>
+      <button class="modal-confirm" onclick="submitPasswordModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const STORAGE_KEY = 'advCoffeeOrderData';
   const SHOP_PASSWORD = 'ADV coffee';
@@ -540,13 +636,30 @@
   }
 
   function toggleShopStatus() {
-    const entered = prompt('Enter password to ' + (shopOpen ? 'close' : 'reopen') + ' orders:');
-    if (entered === null) return;
+    document.getElementById('modalTitle').textContent =
+      'Enter password to ' + (shopOpen ? 'close' : 'reopen') + ' orders';
+    document.getElementById('modalError').classList.remove('visible');
+    const input = document.getElementById('modalPasswordInput');
+    input.value = '';
+    document.getElementById('passwordModal').classList.add('open');
+    input.focus();
+  }
+
+  function closePasswordModal() {
+    document.getElementById('passwordModal').classList.remove('open');
+  }
+
+  function submitPasswordModal() {
+    const entered = document.getElementById('modalPasswordInput').value;
     if (entered !== SHOP_PASSWORD) {
-      alert('Incorrect password.');
+      document.getElementById('modalError').classList.add('visible');
       return;
     }
+    closePasswordModal();
+    applyShopStatusToggle();
+  }
 
+  function applyShopStatusToggle() {
     shopOpen = !shopOpen;
     const btn = document.getElementById('statusBtn');
     const banner = document.getElementById('closedBanner');
@@ -564,6 +677,15 @@
       panel.classList.add('disabled');
     }
   }
+
+  document.getElementById('modalPasswordInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitPasswordModal();
+    if (e.key === 'Escape') closePasswordModal();
+  });
+
+  document.getElementById('passwordModal').addEventListener('click', (e) => {
+    if (e.target.id === 'passwordModal') closePasswordModal();
+  });
 
   function formatTime(date) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
