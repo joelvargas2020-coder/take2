@@ -64,8 +64,7 @@
     flex-wrap: wrap;
   }
 
-  button.status-btn,
-  button.eod-btn {
+  button.status-btn {
     font-family: 'Inter', sans-serif;
     font-size: 15px;
     font-weight: 600;
@@ -83,12 +82,6 @@
     color: var(--accent-dark);
   }
 
-  button.eod-btn {
-    border-color: var(--muted);
-    color: var(--muted);
-  }
-
-  button.eod-btn:active,
   button.status-btn:active {
     transform: scale(0.98);
   }
@@ -398,8 +391,7 @@
   </header>
 
   <div class="shop-status-row">
-    <button class="status-btn" id="statusBtn" onclick="toggleShopStatus()">● Taking Orders — Tap to Close</button>
-    <button class="eod-btn" id="eodBtn" onclick="clearAllData()">End of Day — Clear All Data</button>
+    <button class="status-btn" id="statusBtn" onclick="toggleShopStatus()">● Taking Orders</button>
   </div>
 
   <div class="closed-banner" id="closedBanner">Currently not accepting orders</div>
@@ -561,36 +553,16 @@
     const panel = document.getElementById('orderPanel');
 
     if (shopOpen) {
-      btn.textContent = '● Taking Orders — Tap to Close';
+      btn.textContent = '● Taking Orders';
       btn.classList.remove('closed');
       banner.style.display = 'none';
       panel.classList.remove('disabled');
     } else {
-      btn.textContent = '● Closed — Tap to Reopen';
+      btn.textContent = '● Closed';
       btn.classList.add('closed');
       banner.style.display = 'block';
       panel.classList.add('disabled');
     }
-  }
-
-  function clearAllData() {
-    const entered = prompt('Enter password to clear ALL order data (active queue + completed history):');
-    if (entered === null) return;
-    if (entered !== SHOP_PASSWORD) {
-      alert('Incorrect password.');
-      return;
-    }
-    if (!confirm('This will permanently erase the active queue and completed order history. Continue?')) {
-      return;
-    }
-    queue = [];
-    completed = [];
-    nextId = 1;
-    currentDrinks = [];
-    renderCurrentDrinks();
-    renderQueue();
-    renderCompleted();
-    saveData();
   }
 
   function formatTime(date) {
