@@ -8,17 +8,16 @@
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
 
   :root {
-    --bg: #EEF3FA;
+    --bg: #FBF3E9;
     --panel: #FFFFFF;
-    --ink: #16283D;
-    --muted: #64778C;
-    --line: #DCE7F2;
-    --accent: #2E5F94;
-    --accent-dark: #1E4470;
-    --accent2: #3D8FBF;
+    --ink: #2C1B12;
+    --muted: #8A7060;
+    --line: #EADACA;
+    --accent: #C1502E;
+    --accent-dark: #9C3D22;
+    --gold: #C98A2C;
     --green: #4F8B62;
     --green-dark: #3E6E4E;
-    --warn: #B5482E;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -79,8 +78,8 @@
   }
 
   button.status-btn.closed {
-    border-color: var(--warn);
-    color: var(--warn);
+    border-color: var(--accent);
+    color: var(--accent-dark);
   }
 
   button.status-btn:active {
@@ -90,7 +89,7 @@
   .closed-banner {
     display: none;
     text-align: center;
-    background: var(--warn);
+    background: var(--accent);
     color: #fff;
     font-weight: 600;
     font-size: 15px;
@@ -105,7 +104,7 @@
     border-radius: 14px;
     padding: 22px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 10px rgba(22, 40, 61, 0.05);
+    box-shadow: 0 2px 10px rgba(44, 27, 18, 0.04);
   }
 
   .panel-title {
@@ -166,7 +165,7 @@
     min-height: 50px;
     border-radius: 10px;
     border: none;
-    background: var(--accent2);
+    background: var(--gold);
     color: #fff;
     cursor: pointer;
     white-space: nowrap;
@@ -185,7 +184,7 @@
     align-items: center;
     gap: 8px;
     background: var(--bg);
-    border: 1.5px solid var(--accent2);
+    border: 1.5px solid var(--gold);
     color: var(--ink);
     font-size: 14.5px;
     font-weight: 500;
@@ -194,7 +193,7 @@
   }
 
   .drink-chip button {
-    background: var(--accent2);
+    background: var(--gold);
     color: #fff;
     border: none;
     width: 26px;
@@ -250,7 +249,7 @@
   .queue-position {
     font-family: 'DM Serif Display', serif;
     font-size: 22px;
-    color: var(--accent2);
+    color: var(--gold);
     width: 30px;
     text-align: center;
     flex-shrink: 0;
@@ -291,8 +290,8 @@
   }
 
   .tag-ordered {
-    color: var(--accent2);
-    background: rgba(61, 143, 191, 0.14);
+    color: var(--gold);
+    background: rgba(201, 138, 44, 0.12);
   }
 
   .tag-done {
