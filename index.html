@@ -608,38 +608,25 @@
   </div>
 </div>
 
-<script>
-  const STORAGE_KEY = 'advCoffeeOrderData';
+<script type="module">
+  import { firebaseConfig } from './firebase-config.js';
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+  import {
+    getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc,
+    onSnapshot, query, where
+  } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const ordersCol = collection(db, 'orders');
+  const shopStatusRef = doc(db, 'shop', 'status');
+
   const SHOP_PASSWORD = 'ADV coffee';
 
   let queue = [];
   let completed = [];
-  let nextId = 1;
   let currentDrinks = [];
   let shopOpen = true;
-
-  function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ queue, completed, nextId }));
-  }
-
-  function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      queue = (data.queue || []).map(o => ({ ...o, time: new Date(o.time) }));
-      completed = (data.completed || []).map(o => ({
-        ...o,
-        time: new Date(o.time),
-        completedTime: new Date(o.completedTime)
-      }));
-      nextId = data.nextId || 1;
-    } catch (e) {
-      queue = [];
-      completed = [];
-      nextId = 1;
-    }
-  }
 
   function toggleShopStatus() {
     document.getElementById('modalTitle').textContent =
@@ -662,11 +649,10 @@
       return;
     }
     closePasswordModal();
-    applyShopStatusToggle();
+    setDoc(shopStatusRef, { open: !shopOpen }, { merge: true });
   }
 
-  function applyShopStatusToggle() {
-    shopOpen = !shopOpen;
+  function updateStatusUI() {
     const btn = document.getElementById('statusBtn');
     const banner = document.getElementById('closedBanner');
     const panel = document.getElementById('orderPanel');
@@ -684,6 +670,12 @@
     }
   }
 
+  onSnapshot(shopStatusRef, (snap) => {
+    const data = snap.data();
+    shopOpen = !data || data.open !== false;
+    updateStatusUI();
+  });
+
   document.getElementById('modalPasswordInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') submitPasswordModal();
     if (e.key === 'Escape') closePasswordModal();
@@ -693,8 +685,9 @@
     if (e.target.id === 'passwordModal') closePasswordModal();
   });
 
-  function formatTime(date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  function formatTime(timestamp) {
+    if (!timestamp) return '...';
+    return timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   function addDrinkToCurrentOrder() {
@@ -719,36 +712,25 @@
     });
   }
 
-  function submitOrder() {
+  async function submitOrder() {
     if (!shopOpen) return;
     if (currentDrinks.length === 0) return;
     const nameInput = document.getElementById('nameInput');
     const name = nameInput.value.trim() || 'Guest';
-    queue.push({ id: nextId++, name: name, drinks: [...currentDrinks], time: new Date() });
+    const drinks = [...currentDrinks];
     nameInput.value = '';
     currentDrinks = [];
     renderCurrentDrinks();
-    renderQueue();
-    saveData();
     nameInput.focus();
+    await addDoc(ordersCol, { name, drinks, status: 'ordered', orderedAt: new Date() });
   }
 
-  function serveOrder(id) {
-    const order = queue.find(o => o.id === id);
-    if (!order) return;
-    queue = queue.filter(o => o.id !== id);
-    order.completedTime = new Date();
-    order.status = 'Done';
-    completed.unshift(order);
-    renderQueue();
-    renderCompleted();
-    saveData();
+  async function serveOrder(id) {
+    await updateDoc(doc(db, 'orders', id), { status: 'done', completedAt: new Date() });
   }
 
-  function clearCompleted() {
-    completed = [];
-    renderCompleted();
-    saveData();
+  async function clearCompleted() {
+    await Promise.all(completed.map((order) => deleteDoc(doc(db, 'orders', order.id))));
   }
 
   function renderCompleted() {
@@ -767,7 +749,7 @@
         <div class="queue-check">&#10003;</div>
         <div class="queue-info">
           <div class="queue-drink">${order.name} — ${order.drinks.join(', ')}</div>
-          <div class="queue-time">Ordered ${formatTime(order.time)} · Done ${formatTime(order.completedTime)}</div>
+          <div class="queue-time">Ordered ${formatTime(order.orderedAt)} · Done ${formatTime(order.completedAt)}</div>
         </div>
         <div class="tag tag-done">DONE</div>
       `;
@@ -791,18 +773,35 @@
         <div class="queue-position">${index + 1}</div>
         <div class="queue-info">
           <div class="queue-drink">${order.name} — ${order.drinks.join(', ')}</div>
-          <div class="queue-time">Added ${formatTime(order.time)}</div>
+          <div class="queue-time">Added ${formatTime(order.orderedAt)}</div>
         </div>
         <div class="tag tag-ordered">ORDERED</div>
-        <button class="serve-btn" onclick="serveOrder(${order.id})">Mark Done</button>
+        <button class="serve-btn" onclick="serveOrder('${order.id}')">Mark Done</button>
       `;
       list.appendChild(item);
     });
   }
 
-  loadData();
-  renderQueue();
-  renderCompleted();
+  onSnapshot(query(ordersCol, where('status', '==', 'ordered')), (snap) => {
+    queue = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    queue.sort((a, b) => (a.orderedAt?.toMillis() ?? 0) - (b.orderedAt?.toMillis() ?? 0));
+    renderQueue();
+  });
+
+  onSnapshot(query(ordersCol, where('status', '==', 'done')), (snap) => {
+    completed = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    completed.sort((a, b) => (b.completedAt?.toMillis() ?? 0) - (a.completedAt?.toMillis() ?? 0));
+    renderCompleted();
+  });
+
+  window.toggleShopStatus = toggleShopStatus;
+  window.closePasswordModal = closePasswordModal;
+  window.submitPasswordModal = submitPasswordModal;
+  window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
+  window.removeDrinkFromCurrent = removeDrinkFromCurrent;
+  window.submitOrder = submitOrder;
+  window.serveOrder = serveOrder;
+  window.clearCompleted = clearCompleted;
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

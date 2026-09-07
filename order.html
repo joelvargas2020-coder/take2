@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ADV Coffee — Order</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #FBF3E9;
+    --panel: #FFFFFF;
+    --ink: #2C1B12;
+    --muted: #8A7060;
+    --line: #EADACA;
+    --accent: #C1502E;
+    --accent-dark: #9C3D22;
+    --gold: #C98A2C;
+    --green: #4F8B62;
+    --green-dark: #3E6E4E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 32px 16px 60px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .wrap {
+    max-width: 640px;
+    width: 100%;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .shop-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    color: var(--accent-dark);
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .closed-banner {
+    display: none;
+    text-align: center;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(44, 27, 18, 0.04);
+  }
+
+  .panel-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--accent-dark);
+    margin-bottom: 18px;
+  }
+
+  .panel.disabled select,
+  .panel.disabled input,
+  .panel.disabled .add-btn,
+  .panel.disabled .submit-btn {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  input.name-input,
+  select.drink-select {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 14px 14px;
+    min-height: 50px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    width: 100%;
+  }
+
+  input.name-input::placeholder {
+    color: var(--muted);
+  }
+
+  .name-row {
+    margin-bottom: 12px;
+  }
+
+  .drink-picker-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  select.drink-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  button.add-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 18px;
+    min-height: 50px;
+    border-radius: 10px;
+    border: none;
+    background: var(--gold);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .current-drinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    min-height: 0;
+  }
+
+  .drink-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1.5px solid var(--gold);
+    color: var(--ink);
+    font-size: 14.5px;
+    font-weight: 500;
+    padding: 8px 8px 8px 14px;
+    border-radius: 20px;
+  }
+
+  .drink-chip button {
+    background: var(--gold);
+    color: #fff;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  button.submit-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 16px;
+    min-height: 54px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  button.submit-btn:active {
+    background: var(--accent-dark);
+  }
+
+  button.submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .confirmation {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .confirmation.visible {
+    display: block;
+  }
+
+  .confirmation-check {
+    font-size: 40px;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+
+  .confirmation-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent-dark);
+    margin-bottom: 8px;
+  }
+
+  .confirmation-detail {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  button.again-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 1.5px solid var(--accent);
+    background: transparent;
+    color: var(--accent-dark);
+    cursor: pointer;
+  }
+
+  .order-form.hidden {
+    display: none;
+  }
+
+  .menu-section {
+    margin-bottom: 28px;
+  }
+
+  .menu-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--accent-dark);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .menu-price {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .menu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .menu-row:last-child {
+    border-bottom: none;
+  }
+
+  .menu-item {
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  .menu-note {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="shop-name">ADV Coffee</div>
+    <div class="tagline">Order Ahead</div>
+  </header>
+
+  <div class="closed-banner" id="closedBanner">Currently not accepting orders</div>
+
+  <div class="panel" id="orderPanel">
+    <div class="panel-title">Place Your Order</div>
+
+    <div class="order-form" id="orderForm">
+      <div class="name-row">
+        <input type="text" id="nameInput" class="name-input" placeholder="Your name">
+      </div>
+      <div class="drink-picker-row">
+        <select id="drinkSelect" class="drink-select">
+          <optgroup label="Coffee & Matcha — $5">
+            <option>Vanilla (Hot)</option>
+            <option>Vanilla (Iced)</option>
+            <option>Mocha (Hot)</option>
+            <option>Mocha (Iced)</option>
+            <option>Caramel (Hot)</option>
+            <option>Caramel (Iced)</option>
+            <option>Cookie Butter (Hot)</option>
+            <option>Cookie Butter (Iced)</option>
+            <option>Maple (Hot)</option>
+            <option>Maple (Iced)</option>
+            <option>Matcha (Hot)</option>
+            <option>Matcha (Iced)</option>
+          </optgroup>
+          <optgroup label="Non-Caffeine — $4">
+            <option>Chocolate Milk</option>
+            <option>Strawberry Milk</option>
+            <option>Cookie Butter Milk</option>
+          </optgroup>
+        </select>
+        <button class="add-btn" onclick="addDrinkToCurrentOrder()">+ Add</button>
+      </div>
+      <div class="current-drinks" id="currentDrinks"></div>
+      <button class="submit-btn" id="submitBtn" onclick="submitOrder()">Submit Order</button>
+    </div>
+
+    <div class="confirmation" id="confirmation">
+      <div class="confirmation-check">&#10003;</div>
+      <div class="confirmation-title">Order placed!</div>
+      <div class="confirmation-detail" id="confirmationDetail"></div>
+      <button class="again-btn" onclick="placeAnother()">Place Another Order</button>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-heading">
+      Coffee &amp; Matcha
+      <span class="menu-price">$5.00</span>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Vanilla</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Mocha</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Caramel</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Cookie Butter</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Maple</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Matcha</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-heading">
+      Non-Caffeine
+      <span class="menu-price">$4.00</span>
+    </div>
+    <div class="menu-row">
+      <div class="menu-item">Chocolate Milk</div>
+    </div>
+    <div class="menu-row">
+      <div class="menu-item">Strawberry Milk</div>
+    </div>
+    <div class="menu-row">
+      <div class="menu-item">Cookie Butter Milk</div>
+    </div>
+  </div>
+
+  <footer>
+    Orders are prepared in the order received.
+  </footer>
+</div>
+
+<script type="module">
+  import { firebaseConfig } from './firebase-config.js';
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+  import {
+    getFirestore, collection, doc, addDoc, onSnapshot
+  } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const ordersCol = collection(db, 'orders');
+  const shopStatusRef = doc(db, 'shop', 'status');
+
+  let currentDrinks = [];
+  let shopOpen = true;
+
+  onSnapshot(shopStatusRef, (snap) => {
+    const data = snap.data();
+    shopOpen = !data || data.open !== false;
+    const banner = document.getElementById('closedBanner');
+    const panel = document.getElementById('orderPanel');
+    if (shopOpen) {
+      banner.style.display = 'none';
+      panel.classList.remove('disabled');
+    } else {
+      banner.style.display = 'block';
+      panel.classList.add('disabled');
+    }
+  });
+
+  function addDrinkToCurrentOrder() {
+    const select = document.getElementById('drinkSelect');
+    currentDrinks.push(select.value);
+    renderCurrentDrinks();
+  }
+
+  function removeDrinkFromCurrent(index) {
+    currentDrinks.splice(index, 1);
+    renderCurrentDrinks();
+  }
+
+  function renderCurrentDrinks() {
+    const box = document.getElementById('currentDrinks');
+    box.innerHTML = '';
+    currentDrinks.forEach((drink, index) => {
+      const chip = document.createElement('div');
+      chip.className = 'drink-chip';
+      chip.innerHTML = `<span>${drink}</span><button onclick="removeDrinkFromCurrent(${index})">&times;</button>`;
+      box.appendChild(chip);
+    });
+  }
+
+  async function submitOrder() {
+    if (!shopOpen) return;
+    if (currentDrinks.length === 0) return;
+    const nameInput = document.getElementById('nameInput');
+    const name = nameInput.value.trim() || 'Guest';
+    const drinks = [...currentDrinks];
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    await addDoc(ordersCol, { name, drinks, status: 'ordered', orderedAt: new Date() });
+    submitBtn.disabled = false;
+
+    document.getElementById('confirmationDetail').textContent =
+      `${name} — ${drinks.join(', ')}`;
+    document.getElementById('orderForm').classList.add('hidden');
+    document.getElementById('confirmation').classList.add('visible');
+  }
+
+  function placeAnother() {
+    document.getElementById('nameInput').value = '';
+    currentDrinks = [];
+    renderCurrentDrinks();
+    document.getElementById('confirmation').classList.remove('visible');
+    document.getElementById('orderForm').classList.remove('hidden');
+  }
+
+  window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
+  window.removeDrinkFromCurrent = removeDrinkFromCurrent;
+  window.submitOrder = submitOrder;
+  window.placeAnother = placeAnother;
+</script>
+
+</body>
+</html>
