@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ADV Coffee — Order Queue</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #FBF3E9;
+    --panel: #FFFFFF;
+    --ink: #2C1B12;
+    --muted: #8A7060;
+    --line: #EADACA;
+    --accent: #C1502E;
+    --accent-dark: #9C3D22;
+    --gold: #C98A2C;
+    --green: #4F8B62;
+    --green-dark: #3E6E4E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 32px 16px 60px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .wrap {
+    max-width: 640px;
+    width: 100%;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .shop-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    color: var(--accent-dark);
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .shop-status-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  button.status-btn,
+  button.eod-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 22px;
+    min-height: 48px;
+    border-radius: 24px;
+    border: 1.5px solid var(--green);
+    background: var(--panel);
+    color: var(--green-dark);
+    cursor: pointer;
+  }
+
+  button.status-btn.closed {
+    border-color: var(--accent);
+    color: var(--accent-dark);
+  }
+
+  button.eod-btn {
+    border-color: var(--muted);
+    color: var(--muted);
+  }
+
+  button.eod-btn:active,
+  button.status-btn:active {
+    transform: scale(0.98);
+  }
+
+  .closed-banner {
+    display: none;
+    text-align: center;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(44, 27, 18, 0.04);
+  }
+
+  .panel-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--accent-dark);
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .panel.disabled select,
+  .panel.disabled input,
+  .panel.disabled .add-btn,
+  .panel.disabled .submit-btn {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  input.name-input,
+  select.drink-select {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 14px 14px;
+    min-height: 50px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    width: 100%;
+  }
+
+  input.name-input::placeholder {
+    color: var(--muted);
+  }
+
+  .name-row {
+    margin-bottom: 12px;
+  }
+
+  .drink-picker-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  select.drink-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  button.add-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 18px;
+    min-height: 50px;
+    border-radius: 10px;
+    border: none;
+    background: var(--gold);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .current-drinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    min-height: 0;
+  }
+
+  .drink-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1.5px solid var(--gold);
+    color: var(--ink);
+    font-size: 14.5px;
+    font-weight: 500;
+    padding: 8px 8px 8px 14px;
+    border-radius: 20px;
+  }
+
+  .drink-chip button {
+    background: var(--gold);
+    color: #fff;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  button.submit-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 16px;
+    min-height: 54px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  button.submit-btn:active {
+    background: var(--accent-dark);
+  }
+
+  .queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .queue-empty {
+    color: var(--muted);
+    font-size: 15px;
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    flex-wrap: wrap;
+  }
+
+  .queue-position {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--gold);
+    width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .queue-check {
+    font-size: 20px;
+    color: var(--green);
+    width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .queue-info {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .queue-drink {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .queue-time {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .tag {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .tag-ordered {
+    color: var(--gold);
+    background: rgba(201, 138, 44, 0.12);
+  }
+
+  .tag-done {
+    color: var(--green-dark);
+    background: rgba(79, 139, 98, 0.12);
+  }
+
+  button.serve-btn,
+  button.clear-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    padding: 12px 18px;
+    min-height: 44px;
+    border-radius: 10px;
+    border: 1.5px solid var(--green);
+    background: #fff;
+    color: var(--green-dark);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  button.serve-btn:active {
+    background: var(--green);
+    color: #fff;
+  }
+
+  button.clear-btn {
+    border-color: var(--line);
+    color: var(--muted);
+    padding: 8px 14px;
+    min-height: 38px;
+    font-size: 13.5px;
+  }
+
+  .menu-section {
+    margin-bottom: 28px;
+  }
+
+  .menu-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--accent-dark);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .menu-price {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .menu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .menu-row:last-child {
+    border-bottom: none;
+  }
+
+  .menu-item {
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  .menu-note {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="shop-name">ADV Coffee</div>
+    <div class="tagline">Order Queue</div>
+  </header>
+
+  <div class="shop-status-row">
+    <button class="status-btn" id="statusBtn" onclick="toggleShopStatus()">● Taking Orders — Tap to Close</button>
+    <button class="eod-btn" id="eodBtn" onclick="clearAllData()">End of Day — Clear All Data</button>
+  </div>
+
+  <div class="closed-banner" id="closedBanner">Currently not accepting orders</div>
+
+  <div class="panel" id="orderPanel">
+    <div class="panel-title">Order Queue</div>
+    <div class="name-row">
+      <input type="text" id="nameInput" class="name-input" placeholder="Customer name">
+    </div>
+    <div class="drink-picker-row">
+      <select id="drinkSelect" class="drink-select">
+        <optgroup label="Coffee & Matcha — $5">
+          <option>Vanilla (Hot)</option>
+          <option>Vanilla (Iced)</option>
+          <option>Mocha (Hot)</option>
+          <option>Mocha (Iced)</option>
+          <option>Caramel (Hot)</option>
+          <option>Caramel (Iced)</option>
+          <option>Cookie Butter (Hot)</option>
+          <option>Cookie Butter (Iced)</option>
+          <option>Maple (Hot)</option>
+          <option>Maple (Iced)</option>
+          <option>Matcha (Hot)</option>
+          <option>Matcha (Iced)</option>
+        </optgroup>
+        <optgroup label="Non-Caffeine — $4">
+          <option>Chocolate Milk</option>
+          <option>Strawberry Milk</option>
+          <option>Cookie Butter Milk</option>
+        </optgroup>
+      </select>
+      <button class="add-btn" onclick="addDrinkToCurrentOrder()">+ Add</button>
+    </div>
+    <div class="current-drinks" id="currentDrinks"></div>
+    <button class="submit-btn" onclick="submitOrder()">Submit Order</button>
+    <div class="queue-list" id="queueList" style="margin-top:22px;">
+      <div class="queue-empty">No orders in queue</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">
+      <span>Completed Orders</span>
+      <button class="clear-btn" onclick="clearCompleted()">Clear</button>
+    </div>
+    <div class="queue-list" id="completedList">
+      <div class="queue-empty">No completed orders yet</div>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-heading">
+      Coffee &amp; Matcha
+      <span class="menu-price">$5.00</span>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Vanilla</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Mocha</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Caramel</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Cookie Butter</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Maple</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+    <div class="menu-row">
+      <div>
+        <div class="menu-item">Matcha</div>
+        <div class="menu-note">hot or iced (iced topped with whip)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-heading">
+      Non-Caffeine
+      <span class="menu-price">$4.00</span>
+    </div>
+    <div class="menu-row">
+      <div class="menu-item">Chocolate Milk</div>
+    </div>
+    <div class="menu-row">
+      <div class="menu-item">Strawberry Milk</div>
+    </div>
+    <div class="menu-row">
+      <div class="menu-item">Cookie Butter Milk</div>
+    </div>
+  </div>
+
+  <footer>
+    Orders are prepared in the order received.
+  </footer>
+</div>
+
+<script>
+  const STORAGE_KEY = 'advCoffeeOrderData';
+  const SHOP_PASSWORD = 'ADV coffee';
+
+  let queue = [];
+  let completed = [];
+  let nextId = 1;
+  let currentDrinks = [];
+  let shopOpen = true;
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ queue, completed, nextId }));
+  }
+
+  function loadData() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      queue = (data.queue || []).map(o => ({ ...o, time: new Date(o.time) }));
+      completed = (data.completed || []).map(o => ({
+        ...o,
+        time: new Date(o.time),
+        completedTime: new Date(o.completedTime)
+      }));
+      nextId = data.nextId || 1;
+    } catch (e) {
+      queue = [];
+      completed = [];
+      nextId = 1;
+    }
+  }
+
+  function toggleShopStatus() {
+    const entered = prompt('Enter password to ' + (shopOpen ? 'close' : 'reopen') + ' orders:');
+    if (entered === null) return;
+    if (entered !== SHOP_PASSWORD) {
+      alert('Incorrect password.');
+      return;
+    }
+
+    shopOpen = !shopOpen;
+    const btn = document.getElementById('statusBtn');
+    const banner = document.getElementById('closedBanner');
+    const panel = document.getElementById('orderPanel');
+
+    if (shopOpen) {
+      btn.textContent = '● Taking Orders — Tap to Close';
+      btn.classList.remove('closed');
+      banner.style.display = 'none';
+      panel.classList.remove('disabled');
+    } else {
+      btn.textContent = '● Closed — Tap to Reopen';
+      btn.classList.add('closed');
+      banner.style.display = 'block';
+      panel.classList.add('disabled');
+    }
+  }
+
+  function clearAllData() {
+    const entered = prompt('Enter password to clear ALL order data (active queue + completed history):');
+    if (entered === null) return;
+    if (entered !== SHOP_PASSWORD) {
+      alert('Incorrect password.');
+      return;
+    }
+    if (!confirm('This will permanently erase the active queue and completed order history. Continue?')) {
+      return;
+    }
+    queue = [];
+    completed = [];
+    nextId = 1;
+    currentDrinks = [];
+    renderCurrentDrinks();
+    renderQueue();
+    renderCompleted();
+    saveData();
+  }
+
+  function formatTime(date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function addDrinkToCurrentOrder() {
+    const select = document.getElementById('drinkSelect');
+    currentDrinks.push(select.value);
+    renderCurrentDrinks();
+  }
+
+  function removeDrinkFromCurrent(index) {
+    currentDrinks.splice(index, 1);
+    renderCurrentDrinks();
+  }
+
+  function renderCurrentDrinks() {
+    const box = document.getElementById('currentDrinks');
+    box.innerHTML = '';
+    currentDrinks.forEach((drink, index) => {
+      const chip = document.createElement('div');
+      chip.className = 'drink-chip';
+      chip.innerHTML = `<span>${drink}</span><button onclick="removeDrinkFromCurrent(${index})">&times;</button>`;
+      box.appendChild(chip);
+    });
+  }
+
+  function submitOrder() {
+    if (!shopOpen) return;
+    if (currentDrinks.length === 0) return;
+    const nameInput = document.getElementById('nameInput');
+    const name = nameInput.value.trim() || 'Guest';
+    queue.push({ id: nextId++, name: name, drinks: [...currentDrinks], time: new Date() });
+    nameInput.value = '';
+    currentDrinks = [];
+    renderCurrentDrinks();
+    renderQueue();
+    saveData();
+    nameInput.focus();
+  }
+
+  function serveOrder(id) {
+    const order = queue.find(o => o.id === id);
+    if (!order) return;
+    queue = queue.filter(o => o.id !== id);
+    order.completedTime = new Date();
+    order.status = 'Done';
+    completed.unshift(order);
+    renderQueue();
+    renderCompleted();
+    saveData();
+  }
+
+  function clearCompleted() {
+    completed = [];
+    renderCompleted();
+    saveData();
+  }
+
+  function renderCompleted() {
+    const list = document.getElementById('completedList');
+    list.innerHTML = '';
+
+    if (completed.length === 0) {
+      list.innerHTML = '<div class="queue-empty">No completed orders yet</div>';
+      return;
+    }
+
+    completed.forEach((order) => {
+      const item = document.createElement('div');
+      item.className = 'queue-item';
+      item.innerHTML = `
+        <div class="queue-check">&#10003;</div>
+        <div class="queue-info">
+          <div class="queue-drink">${order.name} — ${order.drinks.join(', ')}</div>
+          <div class="queue-time">Ordered ${formatTime(order.time)} · Done ${formatTime(order.completedTime)}</div>
+        </div>
+        <div class="tag tag-done">DONE</div>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function renderQueue() {
+    const list = document.getElementById('queueList');
+    list.innerHTML = '';
+
+    if (queue.length === 0) {
+      list.innerHTML = '<div class="queue-empty">No orders in queue</div>';
+      return;
+    }
+
+    queue.forEach((order, index) => {
+      const item = document.createElement('div');
+      item.className = 'queue-item';
+      item.innerHTML = `
+        <div class="queue-position">${index + 1}</div>
+        <div class="queue-info">
+          <div class="queue-drink">${order.name} — ${order.drinks.join(', ')}</div>
+          <div class="queue-time">Added ${formatTime(order.time)}</div>
+        </div>
+        <div class="tag tag-ordered">ORDERED</div>
+        <button class="serve-btn" onclick="serveOrder(${order.id})">Mark Done</button>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  loadData();
+  renderQueue();
+  renderCompleted();
+</script>
+
+</body>
+</html>
