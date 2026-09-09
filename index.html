@@ -627,32 +627,19 @@
   let completed = [];
   let currentDrinks = [];
   let shopOpen = true;
-  let pendingAction = null;
 
-  function openPasswordModal(title, action) {
-    document.getElementById('modalTitle').textContent = title;
+  function toggleShopStatus() {
+    document.getElementById('modalTitle').textContent =
+      'Enter password to ' + (shopOpen ? 'close' : 'reopen') + ' orders';
     document.getElementById('modalError').classList.remove('visible');
     const input = document.getElementById('modalPasswordInput');
     input.value = '';
-    pendingAction = action;
     document.getElementById('passwordModal').classList.add('open');
     input.focus();
   }
 
-  function toggleShopStatus() {
-    openPasswordModal(
-      'Enter password to ' + (shopOpen ? 'close' : 'reopen') + ' orders',
-      () => setDoc(shopStatusRef, { open: !shopOpen }, { merge: true })
-    );
-  }
-
-  function requestMarkDone(id) {
-    openPasswordModal('Enter password to mark this order done', () => applyServeOrder(id));
-  }
-
   function closePasswordModal() {
     document.getElementById('passwordModal').classList.remove('open');
-    pendingAction = null;
   }
 
   function submitPasswordModal() {
@@ -661,10 +648,8 @@
       document.getElementById('modalError').classList.add('visible');
       return;
     }
-    const action = pendingAction;
-    document.getElementById('passwordModal').classList.remove('open');
-    pendingAction = null;
-    if (action) action();
+    closePasswordModal();
+    setDoc(shopStatusRef, { open: !shopOpen }, { merge: true });
   }
 
   function updateStatusUI() {
@@ -740,7 +725,7 @@
     await addDoc(ordersCol, { name, drinks, status: 'ordered', orderedAt: new Date() });
   }
 
-  async function applyServeOrder(id) {
+  async function serveOrder(id) {
     await updateDoc(doc(db, 'orders', id), { status: 'done', completedAt: new Date() });
   }
 
@@ -791,7 +776,7 @@
           <div class="queue-time">Added ${formatTime(order.orderedAt)}</div>
         </div>
         <div class="tag tag-ordered">ORDERED</div>
-        <button class="serve-btn" onclick="requestMarkDone('${order.id}')">Mark Done</button>
+        <button class="serve-btn" onclick="serveOrder('${order.id}')">Mark Done</button>
       `;
       list.appendChild(item);
     });
@@ -815,7 +800,7 @@
   window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
   window.removeDrinkFromCurrent = removeDrinkFromCurrent;
   window.submitOrder = submitOrder;
-  window.requestMarkDone = requestMarkDone;
+  window.serveOrder = serveOrder;
   window.clearCompleted = clearCompleted;
 
   if ('serviceWorker' in navigator) {
