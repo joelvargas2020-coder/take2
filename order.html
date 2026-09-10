@@ -56,6 +56,30 @@
     text-transform: uppercase;
   }
 
+  .shop-status-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .status-pill {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 22px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    border-radius: 24px;
+    border: 1.5px solid var(--green);
+    background: var(--panel);
+    color: var(--green-dark);
+  }
+
+  .status-pill.closed {
+    border-color: var(--accent);
+    color: var(--accent-dark);
+  }
+
   .closed-banner {
     display: none;
     text-align: center;
@@ -243,6 +267,13 @@
     background: rgba(79, 139, 98, 0.14);
   }
 
+  .queue-position-note {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    min-height: 18px;
+  }
+
   button.again-btn {
     font-family: 'Inter', sans-serif;
     font-size: 15px;
@@ -322,6 +353,10 @@
     <div class="tagline">Order Ahead</div>
   </header>
 
+  <div class="shop-status-row">
+    <div class="status-pill" id="statusPill">&#9679; Taking Orders</div>
+  </div>
+
   <div class="closed-banner" id="closedBanner">Currently not accepting orders</div>
 
   <div class="panel" id="orderPanel">
@@ -364,6 +399,7 @@
       <div class="confirmation-title">Order placed!</div>
       <div class="confirmation-detail" id="confirmationDetail"></div>
       <div class="status-badge waiting" id="statusBadge">&#9679; Order Received</div>
+      <div class="queue-position-note" id="queuePositionNote"></div>
       <br>
       <button class="again-btn" onclick="placeAnother()">Place Another Order</button>
     </div>
@@ -437,7 +473,7 @@
   import { firebaseConfig } from './firebase-config.js';
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
   import {
-    getFirestore, collection, doc, addDoc, onSnapshot
+    getFirestore, collection, doc, addDoc, onSnapshot, query, where
   } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 
   const app = initializeApp(firebaseConfig);
@@ -447,19 +483,26 @@
 
   let currentDrinks = [];
   let shopOpen = true;
+  let currentOrderId = null;
   let currentOrderUnsub = null;
+  let currentQueueUnsub = null;
 
   onSnapshot(shopStatusRef, (snap) => {
     const data = snap.data();
     shopOpen = !data || data.open !== false;
     const banner = document.getElementById('closedBanner');
     const panel = document.getElementById('orderPanel');
+    const pill = document.getElementById('statusPill');
     if (shopOpen) {
       banner.style.display = 'none';
       panel.classList.remove('disabled');
+      pill.textContent = '● Taking Orders';
+      pill.classList.remove('closed');
     } else {
       banner.style.display = 'block';
       panel.classList.add('disabled');
+      pill.textContent = '● Closed';
+      pill.classList.add('closed');
     }
   });
 
@@ -491,10 +534,30 @@
       badge.textContent = '✓ Ready for Pickup!';
       badge.classList.remove('waiting');
       badge.classList.add('ready');
+      document.getElementById('queuePositionNote').textContent = '';
+      if (currentQueueUnsub) {
+        currentQueueUnsub();
+        currentQueueUnsub = null;
+      }
     } else {
       badge.textContent = '● Order Received';
       badge.classList.remove('ready');
       badge.classList.add('waiting');
+    }
+  }
+
+  function updateQueuePositionNote(orders) {
+    const note = document.getElementById('queuePositionNote');
+    const sorted = [...orders].sort(
+      (a, b) => (a.orderedAt?.toMillis() ?? 0) - (b.orderedAt?.toMillis() ?? 0)
+    );
+    const idx = sorted.findIndex((o) => o.id === currentOrderId);
+    if (idx === -1) {
+      note.textContent = '';
+    } else if (idx === 0) {
+      note.textContent = "You're up next!";
+    } else {
+      note.textContent = `${idx} order${idx === 1 ? '' : 's'} ahead of you`;
     }
   }
 
@@ -508,6 +571,7 @@
     submitBtn.disabled = true;
     const orderRef = await addDoc(ordersCol, { name, drinks, status: 'ordered', orderedAt: new Date() });
     submitBtn.disabled = false;
+    currentOrderId = orderRef.id;
 
     document.getElementById('confirmationDetail').textContent =
       `${name} — ${drinks.join(', ')}`;
@@ -520,6 +584,12 @@
       const data = snap.data();
       updateStatusBadge(data ? data.status : 'ordered');
     });
+
+    if (currentQueueUnsub) currentQueueUnsub();
+    currentQueueUnsub = onSnapshot(query(ordersCol, where('status', '==', 'ordered')), (snap) => {
+      const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      updateQueuePositionNote(orders);
+    });
   }
 
   function placeAnother() {
@@ -527,7 +597,13 @@
       currentOrderUnsub();
       currentOrderUnsub = null;
     }
+    if (currentQueueUnsub) {
+      currentQueueUnsub();
+      currentQueueUnsub = null;
+    }
+    currentOrderId = null;
     document.getElementById('nameInput').value = '';
+    document.getElementById('queuePositionNote').textContent = '';
     currentDrinks = [];
     renderCurrentDrinks();
     document.getElementById('confirmation').classList.remove('visible');

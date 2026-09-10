@@ -589,6 +589,7 @@
   const shopStatusRef = doc(db, 'shop', 'status');
 
   const SHOP_PASSWORD = 'ADV coffee';
+  const UNLOCK_KEY = 'advCoffeeStaffUnlocked';
 
   let queue = [];
   let completed = [];
@@ -606,7 +607,16 @@
       return;
     }
     document.getElementById('lockOverlay').classList.add('unlocked');
+    try {
+      localStorage.setItem(UNLOCK_KEY, 'true');
+    } catch (e) {}
   }
+
+  try {
+    if (localStorage.getItem(UNLOCK_KEY) === 'true') {
+      document.getElementById('lockOverlay').classList.add('unlocked');
+    }
+  } catch (e) {}
 
   function updateStatusUI() {
     const btn = document.getElementById('statusBtn');
