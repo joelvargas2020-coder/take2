@@ -1,7 +1,7 @@
 {
   "name": "ADV Coffee Order Queue",
   "short_name": "ADV Coffee",
-  "start_url": "./index.html",
+  "start_url": "./staff.html",
   "display": "standalone",
   "background_color": "#FBF3E9",
   "theme_color": "#C1502E",

@@ -220,7 +220,27 @@
   .confirmation-detail {
     font-size: 15px;
     color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .status-badge {
+    display: inline-block;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 8px 16px;
+    border-radius: 20px;
     margin-bottom: 20px;
+  }
+
+  .status-badge.waiting {
+    color: var(--gold);
+    background: rgba(201, 138, 44, 0.14);
+  }
+
+  .status-badge.ready {
+    color: var(--green-dark);
+    background: rgba(79, 139, 98, 0.14);
   }
 
   button.again-btn {
@@ -343,6 +363,8 @@
       <div class="confirmation-check">&#10003;</div>
       <div class="confirmation-title">Order placed!</div>
       <div class="confirmation-detail" id="confirmationDetail"></div>
+      <div class="status-badge waiting" id="statusBadge">&#9679; Order Received</div>
+      <br>
       <button class="again-btn" onclick="placeAnother()">Place Another Order</button>
     </div>
   </div>
@@ -425,6 +447,7 @@
 
   let currentDrinks = [];
   let shopOpen = true;
+  let currentOrderUnsub = null;
 
   onSnapshot(shopStatusRef, (snap) => {
     const data = snap.data();
@@ -462,6 +485,19 @@
     });
   }
 
+  function updateStatusBadge(status) {
+    const badge = document.getElementById('statusBadge');
+    if (status === 'done') {
+      badge.textContent = '✓ Ready for Pickup!';
+      badge.classList.remove('waiting');
+      badge.classList.add('ready');
+    } else {
+      badge.textContent = '● Order Received';
+      badge.classList.remove('ready');
+      badge.classList.add('waiting');
+    }
+  }
+
   async function submitOrder() {
     if (!shopOpen) return;
     if (currentDrinks.length === 0) return;
@@ -470,16 +506,27 @@
     const drinks = [...currentDrinks];
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    await addDoc(ordersCol, { name, drinks, status: 'ordered', orderedAt: new Date() });
+    const orderRef = await addDoc(ordersCol, { name, drinks, status: 'ordered', orderedAt: new Date() });
     submitBtn.disabled = false;
 
     document.getElementById('confirmationDetail').textContent =
       `${name} — ${drinks.join(', ')}`;
+    updateStatusBadge('ordered');
     document.getElementById('orderForm').classList.add('hidden');
     document.getElementById('confirmation').classList.add('visible');
+
+    if (currentOrderUnsub) currentOrderUnsub();
+    currentOrderUnsub = onSnapshot(orderRef, (snap) => {
+      const data = snap.data();
+      updateStatusBadge(data ? data.status : 'ordered');
+    });
   }
 
   function placeAnother() {
+    if (currentOrderUnsub) {
+      currentOrderUnsub();
+      currentOrderUnsub = null;
+    }
     document.getElementById('nameInput').value = '';
     currentDrinks = [];
     renderCurrentDrinks();

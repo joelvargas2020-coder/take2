@@ -1,5 +1,8 @@
-const CACHE_NAME = 'adv-coffee-v1';
-const CACHED_URLS = ['./index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE_NAME = 'adv-coffee-v2';
+const CACHED_URLS = [
+  './index.html', './staff.html', './order.html',
+  './manifest.json', './icons/icon-192.png', './icons/icon-512.png'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
