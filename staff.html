@@ -387,19 +387,19 @@
     line-height: 1.6;
   }
 
-  .modal-overlay {
-    display: none;
+  .lock-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--bg);
+    display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    z-index: 100;
+    z-index: 200;
   }
 
-  .modal-overlay.open {
-    display: flex;
+  .lock-overlay.unlocked {
+    display: none;
   }
 
   .modal-box {
@@ -439,36 +439,6 @@
 
   .modal-error.visible {
     display: block;
-  }
-
-  .modal-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 18px;
-  }
-
-  button.modal-cancel,
-  button.modal-confirm {
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    padding: 12px;
-    min-height: 46px;
-    border-radius: 10px;
-    cursor: pointer;
-    flex: 1;
-  }
-
-  button.modal-cancel {
-    border: 1.5px solid var(--line);
-    background: var(--panel);
-    color: var(--muted);
-  }
-
-  button.modal-confirm {
-    border: none;
-    background: var(--accent);
-    color: #fff;
   }
 </style>
 </head>
@@ -596,15 +566,12 @@
   </footer>
 </div>
 
-<div class="modal-overlay" id="passwordModal">
+<div class="lock-overlay" id="lockOverlay">
   <div class="modal-box">
-    <div class="modal-title" id="modalTitle">Enter password to close orders</div>
-    <input type="password" id="modalPasswordInput" class="modal-input" placeholder="Password">
-    <div class="modal-error" id="modalError">Incorrect password.</div>
-    <div class="modal-buttons">
-      <button class="modal-cancel" onclick="closePasswordModal()">Cancel</button>
-      <button class="modal-confirm" onclick="submitPasswordModal()">Confirm</button>
-    </div>
+    <div class="modal-title">Staff Access</div>
+    <input type="password" id="lockPasswordInput" class="modal-input" placeholder="Password">
+    <div class="modal-error" id="lockError">Incorrect password.</div>
+    <button class="submit-btn" style="margin-top:16px;" onclick="submitLockPassword()">Enter</button>
   </div>
 </div>
 
@@ -629,27 +596,16 @@
   let shopOpen = true;
 
   function toggleShopStatus() {
-    document.getElementById('modalTitle').textContent =
-      'Enter password to ' + (shopOpen ? 'close' : 'reopen') + ' orders';
-    document.getElementById('modalError').classList.remove('visible');
-    const input = document.getElementById('modalPasswordInput');
-    input.value = '';
-    document.getElementById('passwordModal').classList.add('open');
-    input.focus();
+    setDoc(shopStatusRef, { open: !shopOpen }, { merge: true });
   }
 
-  function closePasswordModal() {
-    document.getElementById('passwordModal').classList.remove('open');
-  }
-
-  function submitPasswordModal() {
-    const entered = document.getElementById('modalPasswordInput').value;
+  function submitLockPassword() {
+    const entered = document.getElementById('lockPasswordInput').value;
     if (entered !== SHOP_PASSWORD) {
-      document.getElementById('modalError').classList.add('visible');
+      document.getElementById('lockError').classList.add('visible');
       return;
     }
-    closePasswordModal();
-    setDoc(shopStatusRef, { open: !shopOpen }, { merge: true });
+    document.getElementById('lockOverlay').classList.add('unlocked');
   }
 
   function updateStatusUI() {
@@ -676,13 +632,8 @@
     updateStatusUI();
   });
 
-  document.getElementById('modalPasswordInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submitPasswordModal();
-    if (e.key === 'Escape') closePasswordModal();
-  });
-
-  document.getElementById('passwordModal').addEventListener('click', (e) => {
-    if (e.target.id === 'passwordModal') closePasswordModal();
+  document.getElementById('lockPasswordInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitLockPassword();
   });
 
   function formatTime(timestamp) {
@@ -795,8 +746,7 @@
   });
 
   window.toggleShopStatus = toggleShopStatus;
-  window.closePasswordModal = closePasswordModal;
-  window.submitPasswordModal = submitPasswordModal;
+  window.submitLockPassword = submitLockPassword;
   window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
   window.removeDrinkFromCurrent = removeDrinkFromCurrent;
   window.submitOrder = submitOrder;
