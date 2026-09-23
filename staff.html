@@ -92,6 +92,19 @@
     transform: scale(0.98);
   }
 
+  button.lock-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 22px;
+    min-height: 48px;
+    border-radius: 24px;
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    cursor: pointer;
+  }
+
   .closed-banner {
     display: none;
     text-align: center;
@@ -452,6 +465,7 @@
 
   <div class="shop-status-row">
     <button class="status-btn" id="statusBtn" onclick="toggleShopStatus()">● Taking Orders</button>
+    <button class="lock-btn" onclick="lockStaff()">Lock</button>
   </div>
 
   <div class="closed-banner" id="closedBanner">Currently not accepting orders</div>
@@ -608,12 +622,24 @@
     }
     document.getElementById('lockOverlay').classList.add('unlocked');
     try {
-      localStorage.setItem(UNLOCK_KEY, 'true');
+      sessionStorage.setItem(UNLOCK_KEY, 'true');
     } catch (e) {}
   }
 
+  function lockStaff() {
+    try {
+      sessionStorage.removeItem(UNLOCK_KEY);
+    } catch (e) {}
+    const input = document.getElementById('lockPasswordInput');
+    input.value = '';
+    document.getElementById('lockError').classList.remove('visible');
+    document.getElementById('lockOverlay').classList.remove('unlocked');
+    input.focus();
+  }
+
   try {
-    if (localStorage.getItem(UNLOCK_KEY) === 'true') {
+    localStorage.removeItem(UNLOCK_KEY);
+    if (sessionStorage.getItem(UNLOCK_KEY) === 'true') {
       document.getElementById('lockOverlay').classList.add('unlocked');
     }
   } catch (e) {}
@@ -757,6 +783,7 @@
 
   window.toggleShopStatus = toggleShopStatus;
   window.submitLockPassword = submitLockPassword;
+  window.lockStaff = lockStaff;
   window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
   window.removeDrinkFromCurrent = removeDrinkFromCurrent;
   window.submitOrder = submitOrder;
