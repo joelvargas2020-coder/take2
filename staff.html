@@ -346,6 +346,51 @@
     font-size: 13.5px;
   }
 
+  .announce-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .announce-current {
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
+
+  .announce-current.empty {
+    background: var(--bg);
+    color: var(--muted);
+    font-weight: 500;
+    border: 1.5px dashed var(--line);
+  }
+
+  .announce-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  button.preset-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 16px;
+    min-height: 46px;
+    border-radius: 10px;
+    border: 1.5px solid var(--gold);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    flex: 1;
+  }
+
   .menu-section {
     margin-bottom: 28px;
   }
@@ -516,6 +561,23 @@
     </div>
   </div>
 
+  <div class="panel">
+    <div class="panel-title">
+      <span>Announcement</span>
+      <button class="clear-btn" onclick="setAnnouncement('')">Clear</button>
+    </div>
+    <div class="announce-label">Showing on the order page:</div>
+    <div class="announce-current empty" id="announceCurrent">No announcement</div>
+    <div class="announce-presets">
+      <button class="preset-btn" onclick="setAnnouncement('Serving only teachers')">Serving only teachers</button>
+      <button class="preset-btn" onclick="setAnnouncement('Serving only staff')">Serving only staff</button>
+    </div>
+    <div class="drink-picker-row">
+      <input type="text" id="announceInput" class="name-input" maxlength="120" placeholder="Or type your own message">
+      <button class="add-btn" onclick="postCustomAnnouncement()">Post</button>
+    </div>
+  </div>
+
   <div class="menu-section">
     <div class="menu-heading">
       Coffee &amp; Matcha
@@ -601,6 +663,7 @@
   const db = getFirestore(app);
   const ordersCol = collection(db, 'orders');
   const shopStatusRef = doc(db, 'shop', 'status');
+  const announcementRef = doc(db, 'shop', 'announcement');
 
   const SHOP_PASSWORD = 'ADV coffee';
   const UNLOCK_KEY = 'advCoffeeStaffUnlocked';
@@ -661,6 +724,28 @@
       panel.classList.add('disabled');
     }
   }
+
+  function setAnnouncement(message) {
+    setDoc(announcementRef, { message: message.trim() });
+  }
+
+  function postCustomAnnouncement() {
+    const input = document.getElementById('announceInput');
+    if (!input.value.trim()) return;
+    setAnnouncement(input.value);
+    input.value = '';
+  }
+
+  document.getElementById('announceInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') postCustomAnnouncement();
+  });
+
+  onSnapshot(announcementRef, (snap) => {
+    const message = snap.data()?.message || '';
+    const current = document.getElementById('announceCurrent');
+    current.textContent = message || 'No announcement';
+    current.classList.toggle('empty', !message);
+  });
 
   onSnapshot(shopStatusRef, (snap) => {
     const data = snap.data();
@@ -784,6 +869,8 @@
   window.toggleShopStatus = toggleShopStatus;
   window.submitLockPassword = submitLockPassword;
   window.lockStaff = lockStaff;
+  window.setAnnouncement = setAnnouncement;
+  window.postCustomAnnouncement = postCustomAnnouncement;
   window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
   window.removeDrinkFromCurrent = removeDrinkFromCurrent;
   window.submitOrder = submitOrder;

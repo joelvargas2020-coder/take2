@@ -80,6 +80,21 @@
     color: var(--accent-dark);
   }
 
+  .announcement-banner {
+    text-align: center;
+    background: var(--ink);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 18px;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .announcement-banner[hidden] {
+    display: none;
+  }
+
   .closed-banner {
     display: none;
     text-align: center;
@@ -430,6 +445,8 @@
     <div class="status-pill" id="statusPill">&#9679; Taking Orders</div>
   </div>
 
+  <div class="announcement-banner" id="announcementBanner" hidden></div>
+
   <div class="closed-banner" id="closedBanner">Currently not accepting orders</div>
 
   <div class="panel" id="orderPanel">
@@ -560,6 +577,14 @@
   const db = getFirestore(app);
   const ordersCol = collection(db, 'orders');
   const shopStatusRef = doc(db, 'shop', 'status');
+  const announcementRef = doc(db, 'shop', 'announcement');
+
+  onSnapshot(announcementRef, (snap) => {
+    const message = snap.data()?.message || '';
+    const banner = document.getElementById('announcementBanner');
+    banner.textContent = message;
+    banner.hidden = !message;
+  });
 
   let currentDrinks = [];
   let shopOpen = true;
