@@ -80,6 +80,39 @@
     color: var(--accent-dark);
   }
 
+  .lang-toggle {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+
+  .lang-toggle button {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    min-height: 44px;
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .lang-toggle button:first-child {
+    border-radius: 22px 0 0 22px;
+    border-right: none;
+  }
+
+  .lang-toggle button:last-child {
+    border-radius: 0 22px 22px 0;
+  }
+
+  .lang-toggle button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
   .announcement-banner {
     text-align: center;
     background: var(--ink);
@@ -436,9 +469,14 @@
 <body>
 
 <div class="wrap">
+  <div class="lang-toggle" role="group" aria-label="Language / Idioma">
+    <button type="button" data-lang="en" onclick="setLanguage('en')">English</button>
+    <button type="button" data-lang="es" onclick="setLanguage('es')">Español</button>
+  </div>
+
   <header>
     <div class="shop-name">ADV Coffee</div>
-    <div class="tagline">Order Ahead</div>
+    <div class="tagline" data-i18n="tagline">Order Ahead</div>
   </header>
 
   <div class="shop-status-row">
@@ -447,121 +485,119 @@
 
   <div class="announcement-banner" id="announcementBanner" hidden></div>
 
-  <div class="closed-banner" id="closedBanner">Currently not accepting orders</div>
+  <div class="closed-banner" id="closedBanner" data-i18n="closedBanner">Currently not accepting orders</div>
 
   <div class="panel" id="orderPanel">
-    <div class="panel-title">Place Your Order</div>
+    <div class="panel-title" data-i18n="placeYourOrder">Place Your Order</div>
 
     <div class="order-form" id="orderForm">
       <div class="name-row">
-        <input type="text" id="nameInput" class="name-input" placeholder="Your name">
+        <input type="text" id="nameInput" class="name-input" data-i18n-placeholder="yourName" placeholder="Your name">
       </div>
       <div class="drink-picker-row">
         <select id="drinkSelect" class="drink-select">
-          <optgroup label="Coffee & Matcha — $5">
-            <option>Vanilla (Hot)</option>
-            <option>Vanilla (Iced)</option>
-            <option>Mocha (Hot)</option>
-            <option>Mocha (Iced)</option>
-            <option>Caramel (Hot)</option>
-            <option>Caramel (Iced)</option>
-            <option>Cookie Butter (Hot)</option>
-            <option>Cookie Butter (Iced)</option>
-            <option>Maple (Hot)</option>
-            <option>Maple (Iced)</option>
-            <option>Matcha (Hot)</option>
-            <option>Matcha (Iced)</option>
+          <optgroup data-i18n-label="coffeeGroup" label="Coffee &amp; Matcha — $5">
+            <option value="Vanilla (Hot)" data-drink="Vanilla (Hot)">Vanilla (Hot)</option>
+            <option value="Vanilla (Iced)" data-drink="Vanilla (Iced)">Vanilla (Iced)</option>
+            <option value="Mocha (Hot)" data-drink="Mocha (Hot)">Mocha (Hot)</option>
+            <option value="Mocha (Iced)" data-drink="Mocha (Iced)">Mocha (Iced)</option>
+            <option value="Caramel (Hot)" data-drink="Caramel (Hot)">Caramel (Hot)</option>
+            <option value="Caramel (Iced)" data-drink="Caramel (Iced)">Caramel (Iced)</option>
+            <option value="Cookie Butter (Hot)" data-drink="Cookie Butter (Hot)">Cookie Butter (Hot)</option>
+            <option value="Cookie Butter (Iced)" data-drink="Cookie Butter (Iced)">Cookie Butter (Iced)</option>
+            <option value="Maple (Hot)" data-drink="Maple (Hot)">Maple (Hot)</option>
+            <option value="Maple (Iced)" data-drink="Maple (Iced)">Maple (Iced)</option>
+            <option value="Matcha (Hot)" data-drink="Matcha (Hot)">Matcha (Hot)</option>
+            <option value="Matcha (Iced)" data-drink="Matcha (Iced)">Matcha (Iced)</option>
           </optgroup>
-          <optgroup label="Non-Caffeine — $4">
-            <option>Chocolate Milk</option>
-            <option>Strawberry Milk</option>
-            <option>Cookie Butter Milk</option>
+          <optgroup data-i18n-label="nonCaffeineGroup" label="Non-Caffeine — $4">
+            <option value="Chocolate Milk" data-drink="Chocolate Milk">Chocolate Milk</option>
+            <option value="Strawberry Milk" data-drink="Strawberry Milk">Strawberry Milk</option>
+            <option value="Cookie Butter Milk" data-drink="Cookie Butter Milk">Cookie Butter Milk</option>
           </optgroup>
         </select>
-        <button class="add-btn" onclick="addDrinkToCurrentOrder()">+ Add</button>
+        <button class="add-btn" onclick="addDrinkToCurrentOrder()" data-i18n="add">+ Add</button>
       </div>
       <div class="current-drinks" id="currentDrinks"></div>
-      <button class="submit-btn" id="submitBtn" onclick="submitOrder()">Submit Order</button>
+      <button class="submit-btn" id="submitBtn" onclick="submitOrder()" data-i18n="submit">Submit Order</button>
     </div>
 
     <div class="confirmation" id="confirmation">
       <div class="confirmation-check">&#10003;</div>
-      <div class="confirmation-title">Order placed!</div>
+      <div class="confirmation-title" data-i18n="orderPlaced">Order placed!</div>
       <div class="confirmation-detail" id="confirmationDetail"></div>
       <div class="status-badge waiting" id="statusBadge">&#9679; Order Received</div>
       <div class="queue-position-note" id="queuePositionNote"></div>
       <br>
-      <button class="again-btn" onclick="placeAnother()">Place Another Order</button>
+      <button class="again-btn" onclick="placeAnother()" data-i18n="placeAnother">Place Another Order</button>
     </div>
   </div>
 
   <div class="menu-section">
     <div class="menu-heading">
-      Coffee &amp; Matcha
+      <span data-i18n="coffeeMatcha">Coffee &amp; Matcha</span>
       <span class="menu-price">$5.00</span>
     </div>
     <div class="menu-row">
       <div>
-        <div class="menu-item">Vanilla</div>
-        <div class="menu-note">hot or iced (iced topped with whip)</div>
+        <div class="menu-item" data-drink="Vanilla">Vanilla</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
       <div>
-        <div class="menu-item">Mocha</div>
-        <div class="menu-note">hot or iced (iced topped with whip)</div>
+        <div class="menu-item" data-drink="Mocha">Mocha</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
       <div>
-        <div class="menu-item">Caramel</div>
-        <div class="menu-note">hot or iced (iced topped with whip)</div>
+        <div class="menu-item" data-drink="Caramel">Caramel</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
       <div>
-        <div class="menu-item">Cookie Butter</div>
-        <div class="menu-note">hot or iced (iced topped with whip)</div>
+        <div class="menu-item" data-drink="Cookie Butter">Cookie Butter</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
       <div>
-        <div class="menu-item">Maple</div>
-        <div class="menu-note">hot or iced (iced topped with whip)</div>
+        <div class="menu-item" data-drink="Maple">Maple</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
       <div>
-        <div class="menu-item">Matcha</div>
-        <div class="menu-note">hot or iced (iced topped with whip)</div>
+        <div class="menu-item" data-drink="Matcha">Matcha</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
   </div>
 
   <div class="menu-section">
     <div class="menu-heading">
-      Non-Caffeine
+      <span data-i18n="nonCaffeine">Non-Caffeine</span>
       <span class="menu-price">$4.00</span>
     </div>
     <div class="menu-row">
-      <div class="menu-item">Chocolate Milk</div>
+      <div class="menu-item" data-drink="Chocolate Milk">Chocolate Milk</div>
     </div>
     <div class="menu-row">
-      <div class="menu-item">Strawberry Milk</div>
+      <div class="menu-item" data-drink="Strawberry Milk">Strawberry Milk</div>
     </div>
     <div class="menu-row">
-      <div class="menu-item">Cookie Butter Milk</div>
+      <div class="menu-item" data-drink="Cookie Butter Milk">Cookie Butter Milk</div>
     </div>
   </div>
 
   <div class="panel">
-    <div class="panel-title">Live Queue</div>
-    <div class="board-list" id="boardList">
-      <div class="board-empty">No orders right now</div>
-    </div>
+    <div class="panel-title" data-i18n="liveQueue">Live Queue</div>
+    <div class="board-list" id="boardList"></div>
   </div>
 
-  <footer>
+  <footer data-i18n="footer">
     Orders are prepared in the order received.
   </footer>
 </div>
@@ -579,35 +615,171 @@
   const shopStatusRef = doc(db, 'shop', 'status');
   const announcementRef = doc(db, 'shop', 'announcement');
 
-  onSnapshot(announcementRef, (snap) => {
-    const message = snap.data()?.message || '';
-    const banner = document.getElementById('announcementBanner');
-    banner.textContent = message;
-    banner.hidden = !message;
-  });
+  const LANG_KEY = 'advCoffeeLang';
+
+  const TEXT = {
+    en: {
+      pageTitle: 'ADV Coffee — Order',
+      tagline: 'Order Ahead',
+      takingOrders: '● Taking Orders',
+      closed: '● Closed',
+      closedBanner: 'Currently not accepting orders',
+      placeYourOrder: 'Place Your Order',
+      yourName: 'Your name',
+      coffeeGroup: 'Coffee & Matcha — $5',
+      nonCaffeineGroup: 'Non-Caffeine — $4',
+      add: '+ Add',
+      submit: 'Submit Order',
+      orderPlaced: 'Order placed!',
+      orderReceived: '● Order Received',
+      readyForPickup: '✓ Ready for Pickup!',
+      upNext: "You're up next!",
+      ahead: (n) => `${n} order${n === 1 ? '' : 's'} ahead of you`,
+      placeAnother: 'Place Another Order',
+      coffeeMatcha: 'Coffee & Matcha',
+      nonCaffeine: 'Non-Caffeine',
+      hotOrIced: 'hot or iced (iced topped with whip)',
+      liveQueue: 'Live Queue',
+      noOrders: 'No orders right now',
+      inQueue: 'IN QUEUE',
+      readyTag: 'READY',
+      you: '(You)',
+      footer: 'Orders are prepared in the order received.',
+    },
+    es: {
+      pageTitle: 'ADV Coffee — Pedido',
+      tagline: 'Ordena por adelantado',
+      takingOrders: '● Aceptando pedidos',
+      closed: '● Cerrado',
+      closedBanner: 'Por el momento no estamos aceptando pedidos',
+      placeYourOrder: 'Haz tu pedido',
+      yourName: 'Tu nombre',
+      coffeeGroup: 'Café y Matcha — $5',
+      nonCaffeineGroup: 'Sin cafeína — $4',
+      add: '+ Agregar',
+      submit: 'Enviar pedido',
+      orderPlaced: '¡Pedido realizado!',
+      orderReceived: '● Pedido recibido',
+      readyForPickup: '✓ ¡Listo para recoger!',
+      upNext: '¡Sigues tú!',
+      ahead: (n) => (n === 1 ? '1 pedido antes que el tuyo' : `${n} pedidos antes que el tuyo`),
+      placeAnother: 'Hacer otro pedido',
+      coffeeMatcha: 'Café y Matcha',
+      nonCaffeine: 'Sin cafeína',
+      hotOrIced: 'caliente o frío (el frío lleva crema batida)',
+      liveQueue: 'Fila en vivo',
+      noOrders: 'No hay pedidos por ahora',
+      inQueue: 'EN FILA',
+      readyTag: 'LISTO',
+      you: '(Tú)',
+      footer: 'Los pedidos se preparan en el orden en que se reciben.',
+    },
+  };
+
+  const DRINKS_ES = {
+    'Vanilla': 'Vainilla',
+    'Mocha': 'Moca',
+    'Caramel': 'Caramelo',
+    'Cookie Butter': 'Cookie Butter',
+    'Maple': 'Maple',
+    'Matcha': 'Matcha',
+    'Chocolate Milk': 'Leche con chocolate',
+    'Strawberry Milk': 'Leche de fresa',
+    'Cookie Butter Milk': 'Leche de Cookie Butter',
+  };
+  const TEMPS_ES = { Hot: 'Caliente', Iced: 'Frío' };
+
+  const ANNOUNCEMENTS_ES = {
+    'Serving only teachers': 'Solo atendemos a maestros',
+    'Serving only staff': 'Solo atendemos al personal',
+  };
+
+  let lang = 'en';
+  try {
+    if (localStorage.getItem(LANG_KEY) === 'es') lang = 'es';
+  } catch (e) {}
+
+  function t(key) {
+    return TEXT[lang][key];
+  }
+
+  function drinkLabel(name) {
+    if (lang === 'en') return name;
+    const m = /^(.*) \((Hot|Iced)\)$/.exec(name);
+    if (m) return `${DRINKS_ES[m[1]] || m[1]} (${TEMPS_ES[m[2]]})`;
+    return DRINKS_ES[name] || name;
+  }
+
+  function drinkList(drinks) {
+    return (drinks || []).map(drinkLabel).join(', ');
+  }
 
   let currentDrinks = [];
   let shopOpen = true;
   let currentOrderId = null;
   let allOrders = [];
+  let announcement = '';
+  let confirmation = null;
+
+  function applyStaticText() {
+    document.documentElement.lang = lang;
+    document.title = t('pageTitle');
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+    document.querySelectorAll('[data-i18n-label]').forEach((el) => { el.label = t(el.dataset.i18nLabel); });
+    document.querySelectorAll('[data-drink]').forEach((el) => { el.textContent = drinkLabel(el.dataset.drink); });
+    document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+      const active = btn.dataset.lang === lang;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active);
+    });
+  }
+
+  function renderShopStatus() {
+    const banner = document.getElementById('closedBanner');
+    const panel = document.getElementById('orderPanel');
+    const pill = document.getElementById('statusPill');
+    banner.style.display = shopOpen ? 'none' : 'block';
+    panel.classList.toggle('disabled', !shopOpen);
+    pill.textContent = shopOpen ? t('takingOrders') : t('closed');
+    pill.classList.toggle('closed', !shopOpen);
+  }
+
+  function renderAnnouncement() {
+    const banner = document.getElementById('announcementBanner');
+    banner.textContent = lang === 'es' ? (ANNOUNCEMENTS_ES[announcement] || announcement) : announcement;
+    banner.hidden = !announcement;
+  }
+
+  function renderConfirmation() {
+    if (!confirmation) return;
+    document.getElementById('confirmationDetail').textContent =
+      `${confirmation.name} — ${drinkList(confirmation.drinks)}`;
+  }
+
+  function setLanguage(next) {
+    lang = next;
+    try {
+      localStorage.setItem(LANG_KEY, lang);
+    } catch (e) {}
+    applyStaticText();
+    renderShopStatus();
+    renderAnnouncement();
+    renderCurrentDrinks();
+    renderConfirmation();
+    renderBoard();
+    updateMyOrder();
+  }
+
+  onSnapshot(announcementRef, (snap) => {
+    announcement = snap.data()?.message || '';
+    renderAnnouncement();
+  });
 
   onSnapshot(shopStatusRef, (snap) => {
     const data = snap.data();
     shopOpen = !data || data.open !== false;
-    const banner = document.getElementById('closedBanner');
-    const panel = document.getElementById('orderPanel');
-    const pill = document.getElementById('statusPill');
-    if (shopOpen) {
-      banner.style.display = 'none';
-      panel.classList.remove('disabled');
-      pill.textContent = '● Taking Orders';
-      pill.classList.remove('closed');
-    } else {
-      banner.style.display = 'block';
-      panel.classList.add('disabled');
-      pill.textContent = '● Closed';
-      pill.classList.add('closed');
-    }
+    renderShopStatus();
   });
 
   function addDrinkToCurrentOrder() {
@@ -623,12 +795,17 @@
 
   function renderCurrentDrinks() {
     const box = document.getElementById('currentDrinks');
-    box.innerHTML = '';
+    box.replaceChildren();
     currentDrinks.forEach((drink, index) => {
       const chip = document.createElement('div');
       chip.className = 'drink-chip';
-      chip.innerHTML = `<span>${drink}</span><button onclick="removeDrinkFromCurrent(${index})">&times;</button>`;
-      box.appendChild(chip);
+      const label = document.createElement('span');
+      label.textContent = drinkLabel(drink);
+      const remove = document.createElement('button');
+      remove.textContent = '×';
+      remove.addEventListener('click', () => removeDrinkFromCurrent(index));
+      chip.append(label, remove);
+      box.append(chip);
     });
   }
 
@@ -646,15 +823,10 @@
 
   function updateStatusBadge(status) {
     const badge = document.getElementById('statusBadge');
-    if (status === 'done') {
-      badge.textContent = '✓ Ready for Pickup!';
-      badge.classList.remove('waiting');
-      badge.classList.add('ready');
-    } else {
-      badge.textContent = '● Order Received';
-      badge.classList.remove('ready');
-      badge.classList.add('waiting');
-    }
+    const ready = status === 'done';
+    badge.textContent = ready ? t('readyForPickup') : t('orderReceived');
+    badge.classList.toggle('ready', ready);
+    badge.classList.toggle('waiting', !ready);
   }
 
   function updateMyOrder() {
@@ -667,9 +839,9 @@
     if (idx === -1) {
       note.textContent = '';
     } else if (idx === 0) {
-      note.textContent = "You're up next!";
+      note.textContent = t('upNext');
     } else {
-      note.textContent = `${idx} order${idx === 1 ? '' : 's'} ahead of you`;
+      note.textContent = t('ahead')(idx);
     }
   }
 
@@ -685,10 +857,10 @@
     info.className = 'board-info';
     const name = document.createElement('div');
     name.className = 'board-name';
-    name.textContent = order.id === currentOrderId ? `${order.name} (You)` : order.name;
+    name.textContent = order.id === currentOrderId ? `${order.name} ${t('you')}` : order.name;
     const drinks = document.createElement('div');
     drinks.className = 'board-drinks';
-    drinks.textContent = (order.drinks || []).join(', ');
+    drinks.textContent = drinkList(order.drinks);
     info.append(name, drinks);
 
     const tag = document.createElement('div');
@@ -708,13 +880,13 @@
     if (waiting.length === 0 && ready.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'board-empty';
-      empty.textContent = 'No orders right now';
+      empty.textContent = t('noOrders');
       list.append(empty);
       return;
     }
 
-    waiting.forEach((order, i) => list.append(boardItem(order, String(i + 1), 'IN QUEUE', false)));
-    ready.forEach((order) => list.append(boardItem(order, '✓', 'READY', true)));
+    waiting.forEach((order, i) => list.append(boardItem(order, String(i + 1), t('inQueue'), false)));
+    ready.forEach((order) => list.append(boardItem(order, '✓', t('readyTag'), true)));
   }
 
   onSnapshot(ordersCol, (snap) => {
@@ -735,8 +907,8 @@
     submitBtn.disabled = false;
     currentOrderId = orderRef.id;
 
-    document.getElementById('confirmationDetail').textContent =
-      `${name} — ${drinks.join(', ')}`;
+    confirmation = { name, drinks };
+    renderConfirmation();
     updateStatusBadge('ordered');
     document.getElementById('orderForm').classList.add('hidden');
     document.getElementById('confirmation').classList.add('visible');
@@ -746,6 +918,7 @@
 
   function placeAnother() {
     currentOrderId = null;
+    confirmation = null;
     renderBoard();
     document.getElementById('nameInput').value = '';
     document.getElementById('queuePositionNote').textContent = '';
@@ -755,8 +928,12 @@
     document.getElementById('orderForm').classList.remove('hidden');
   }
 
+  applyStaticText();
+  renderShopStatus();
+  renderBoard();
+
+  window.setLanguage = setLanguage;
   window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
-  window.removeDrinkFromCurrent = removeDrinkFromCurrent;
   window.submitOrder = submitOrder;
   window.placeAnother = placeAnother;
 </script>
