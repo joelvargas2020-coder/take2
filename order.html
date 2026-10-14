@@ -177,6 +177,21 @@
     width: 100%;
   }
 
+  textarea.note-input {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    width: 100%;
+    resize: vertical;
+    margin-bottom: 14px;
+  }
+
+  textarea.note-input::placeholder,
   input.name-input::placeholder {
     color: var(--muted);
   }
@@ -302,6 +317,16 @@
     font-size: 22px;
     color: var(--accent-dark);
     margin-bottom: 8px;
+  }
+
+  .confirmation-note {
+    font-size: 14px;
+    color: var(--ink);
+    margin: -8px 0 16px;
+  }
+
+  .confirmation-note[hidden] {
+    display: none;
   }
 
   .confirmation-detail {
@@ -532,6 +557,9 @@
         <button class="add-btn" onclick="addDrinkToCurrentOrder()" data-i18n="add">+ Add</button>
       </div>
       <div class="current-drinks" id="currentDrinks"></div>
+      <textarea id="noteInput" class="note-input" rows="2" maxlength="150"
+        data-i18n-placeholder="notePlaceholder"
+        placeholder="Special requests (optional), e.g. sugar-free, lactose-free"></textarea>
       <button class="submit-btn" id="submitBtn" onclick="submitOrder()" data-i18n="submit">Submit Order</button>
     </div>
 
@@ -539,6 +567,7 @@
       <div class="confirmation-check">&#10003;</div>
       <div class="confirmation-title" data-i18n="orderPlaced">Order placed!</div>
       <div class="confirmation-detail" id="confirmationDetail"></div>
+      <div class="confirmation-note" id="confirmationNote" hidden></div>
       <div class="status-badge waiting" id="statusBadge">&#9679; Order Received</div>
       <div class="queue-position-note" id="queuePositionNote"></div>
       <br>
@@ -640,6 +669,8 @@
       closedBanner: 'Currently not accepting orders',
       placeYourOrder: 'Place Your Order',
       yourName: 'Your name',
+      notePlaceholder: 'Special requests (optional), e.g. sugar-free, lactose-free',
+      noteLabel: 'Note',
       coffeeGroup: 'Coffee — $5',
       nonCaffeineGroup: 'Non-Caffeine — $4',
       add: '+ Add',
@@ -671,6 +702,8 @@
       closedBanner: 'Por el momento no estamos aceptando pedidos',
       placeYourOrder: 'Haz tu pedido',
       yourName: 'Tu nombre',
+      notePlaceholder: 'Peticiones especiales (opcional), ej.: sin azúcar, sin lactosa',
+      noteLabel: 'Nota',
       coffeeGroup: 'Café — $5',
       nonCaffeineGroup: 'Sin cafeína — $4',
       add: '+ Agregar',
@@ -799,6 +832,9 @@
     if (!confirmation) return;
     document.getElementById('confirmationDetail').textContent =
       `${confirmation.name} — ${drinkList(confirmation.drinks)}`;
+    const note = document.getElementById('confirmationNote');
+    note.textContent = `${t('noteLabel')}: ${confirmation.note}`;
+    note.hidden = !confirmation.note;
   }
 
   function setLanguage(next) {
@@ -959,11 +995,12 @@
     const drinks = [...currentDrinks];
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    const orderRef = await addDoc(ordersCol, { name, drinks, status: 'ordered', orderedAt: new Date() });
+    const note = document.getElementById('noteInput').value.trim();
+    const orderRef = await addDoc(ordersCol, { name, drinks, note, status: 'ordered', orderedAt: new Date() });
     submitBtn.disabled = false;
     currentOrderId = orderRef.id;
 
-    confirmation = { name, drinks };
+    confirmation = { name, drinks, note };
     renderConfirmation();
     updateStatusBadge('ordered');
     document.getElementById('orderForm').classList.add('hidden');
@@ -977,6 +1014,7 @@
     confirmation = null;
     renderBoard();
     document.getElementById('nameInput').value = '';
+    document.getElementById('noteInput').value = '';
     document.getElementById('queuePositionNote').textContent = '';
     currentDrinks = [];
     renderCurrentDrinks();

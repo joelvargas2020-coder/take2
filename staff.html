@@ -293,6 +293,18 @@
     color: var(--ink);
   }
 
+  .queue-note {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    background: rgba(201, 138, 44, 0.18);
+    border-left: 3px solid var(--gold);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 6px;
+  }
+
   .queue-time {
     font-size: 13px;
     color: var(--muted);
@@ -891,52 +903,59 @@
     await Promise.all(completed.map((order) => deleteDoc(doc(db, 'orders', order.id))));
   }
 
+  function textDiv(className, text) {
+    const el = document.createElement('div');
+    el.className = className;
+    el.textContent = text;
+    return el;
+  }
+
+  function orderItem(order, marker, markerClass, timeText) {
+    const item = document.createElement('div');
+    item.className = 'queue-item';
+    const info = document.createElement('div');
+    info.className = 'queue-info';
+    info.append(textDiv('queue-drink', `${order.name} — ${(order.drinks || []).join(', ')}`));
+    if (order.note) info.append(textDiv('queue-note', `Note: ${order.note}`));
+    info.append(textDiv('queue-time', timeText));
+    item.append(textDiv(markerClass, marker), info);
+    return item;
+  }
+
   function renderCompleted() {
     const list = document.getElementById('completedList');
-    list.innerHTML = '';
+    list.replaceChildren();
 
     if (completed.length === 0) {
-      list.innerHTML = '<div class="queue-empty">No completed orders yet</div>';
+      list.append(textDiv('queue-empty', 'No completed orders yet'));
       return;
     }
 
     completed.forEach((order) => {
-      const item = document.createElement('div');
-      item.className = 'queue-item';
-      item.innerHTML = `
-        <div class="queue-check">&#10003;</div>
-        <div class="queue-info">
-          <div class="queue-drink">${order.name} — ${order.drinks.join(', ')}</div>
-          <div class="queue-time">Ordered ${formatTime(order.orderedAt)} · Done ${formatTime(order.completedAt)}</div>
-        </div>
-        <div class="tag tag-done">DONE</div>
-      `;
-      list.appendChild(item);
+      const item = orderItem(order, '✓', 'queue-check',
+        `Ordered ${formatTime(order.orderedAt)} · Done ${formatTime(order.completedAt)}`);
+      item.append(textDiv('tag tag-done', 'DONE'));
+      list.append(item);
     });
   }
 
   function renderQueue() {
     const list = document.getElementById('queueList');
-    list.innerHTML = '';
+    list.replaceChildren();
 
     if (queue.length === 0) {
-      list.innerHTML = '<div class="queue-empty">No orders in queue</div>';
+      list.append(textDiv('queue-empty', 'No orders in queue'));
       return;
     }
 
     queue.forEach((order, index) => {
-      const item = document.createElement('div');
-      item.className = 'queue-item';
-      item.innerHTML = `
-        <div class="queue-position">${index + 1}</div>
-        <div class="queue-info">
-          <div class="queue-drink">${order.name} — ${order.drinks.join(', ')}</div>
-          <div class="queue-time">Added ${formatTime(order.orderedAt)}</div>
-        </div>
-        <div class="tag tag-ordered">ORDERED</div>
-        <button class="serve-btn" onclick="serveOrder('${order.id}')">Mark Done</button>
-      `;
-      list.appendChild(item);
+      const item = orderItem(order, String(index + 1), 'queue-position', `Added ${formatTime(order.orderedAt)}`);
+      const button = document.createElement('button');
+      button.className = 'serve-btn';
+      button.textContent = 'Mark Done';
+      button.addEventListener('click', () => serveOrder(order.id));
+      item.append(textDiv('tag tag-ordered', 'ORDERED'), button);
+      list.append(item);
     });
   }
 
@@ -962,7 +981,6 @@
   window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
   window.removeDrinkFromCurrent = removeDrinkFromCurrent;
   window.submitOrder = submitOrder;
-  window.serveOrder = serveOrder;
   window.clearCompleted = clearCompleted;
 
   if ('serviceWorker' in navigator) {
