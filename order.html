@@ -201,12 +201,7 @@
     flex: 1 1 100px;
   }
 
-  select.sweet-select {
-    flex: 1 1 120px;
-  }
-
-  select.temp-select[hidden],
-  select.sweet-select[hidden] {
+  select.temp-select[hidden] {
     display: none;
   }
 
@@ -534,11 +529,6 @@
           <option value="Hot" data-i18n="hot">Hot</option>
           <option value="Iced" data-i18n="iced">Iced</option>
         </select>
-        <select id="sweetSelect" class="drink-select sweet-select">
-          <option value="Regular" data-i18n="regular">Regular</option>
-          <option value="Less Sweet" data-i18n="lessSweet">Less Sweet</option>
-          <option value="Sugar-Free" data-i18n="sugarFree">Sugar-Free</option>
-        </select>
         <button class="add-btn" onclick="addDrinkToCurrentOrder()" data-i18n="add">+ Add</button>
       </div>
       <div class="current-drinks" id="currentDrinks"></div>
@@ -564,7 +554,7 @@
     <div class="menu-row">
       <div>
         <div class="menu-item" data-drink="Vanilla">Vanilla</div>
-        <div class="menu-note" data-i18n="hotOrIcedSugarFree">hot or iced (iced topped with whip) · less sweet or sugar-free available</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
@@ -576,13 +566,13 @@
     <div class="menu-row">
       <div>
         <div class="menu-item" data-drink="Caramel">Caramel</div>
-        <div class="menu-note" data-i18n="hotOrIcedSugarFree">hot or iced (iced topped with whip) · less sweet or sugar-free available</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
       <div>
         <div class="menu-item" data-drink="Brown Sugar">Brown Sugar</div>
-        <div class="menu-note" data-i18n="hotOrIcedSugarFree">hot or iced (iced topped with whip) · less sweet or sugar-free available</div>
+        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
       </div>
     </div>
     <div class="menu-row">
@@ -655,9 +645,6 @@
       add: '+ Add',
       hot: 'Hot',
       iced: 'Iced',
-      regular: 'Regular',
-      lessSweet: 'Less Sweet',
-      sugarFree: 'Sugar-Free',
       submit: 'Submit Order',
       orderPlaced: 'Order placed!',
       orderReceived: '● Order Received',
@@ -668,7 +655,6 @@
       coffee: 'Coffee',
       nonCaffeine: 'Non-Caffeine',
       hotOrIced: 'hot or iced (iced topped with whip)',
-      hotOrIcedSugarFree: 'hot or iced (iced topped with whip) · less sweet or sugar-free available',
       liveQueue: 'Live Queue',
       noOrders: 'No orders right now',
       inQueue: 'IN QUEUE',
@@ -690,9 +676,6 @@
       add: '+ Agregar',
       hot: 'Caliente',
       iced: 'Frío',
-      regular: 'Regular',
-      lessSweet: 'Menos dulce',
-      sugarFree: 'Sin azúcar',
       submit: 'Enviar pedido',
       orderPlaced: '¡Pedido realizado!',
       orderReceived: '● Pedido recibido',
@@ -703,7 +686,6 @@
       coffee: 'Café',
       nonCaffeine: 'Sin cafeína',
       hotOrIced: 'caliente o frío (el frío lleva crema batida)',
-      hotOrIcedSugarFree: 'caliente o frío (el frío lleva crema batida) · disponible menos dulce o sin azúcar',
       liveQueue: 'Fila en vivo',
       noOrders: 'No hay pedidos por ahora',
       inQueue: 'EN FILA',
@@ -846,29 +828,19 @@
   });
 
   const NO_TEMP_DRINKS = ['Chocolate Milk', 'Strawberry Milk', 'Cookie Butter Milk'];
-  const SUGAR_FREE_DRINKS = ['Vanilla', 'Caramel', 'Brown Sugar'];
 
-  function updateOptionSelects() {
+  function updateTempSelect() {
     const drink = document.getElementById('drinkSelect').value;
     document.getElementById('tempSelect').hidden = NO_TEMP_DRINKS.includes(drink);
-    document.getElementById('sweetSelect').hidden = !SUGAR_FREE_DRINKS.includes(drink);
   }
 
-  document.getElementById('drinkSelect').addEventListener('change', updateOptionSelects);
-  updateOptionSelects();
+  document.getElementById('drinkSelect').addEventListener('change', updateTempSelect);
+  updateTempSelect();
 
   function addDrinkToCurrentOrder() {
     const drink = document.getElementById('drinkSelect').value;
     const temp = document.getElementById('tempSelect').value;
-    const sweetness = SUGAR_FREE_DRINKS.includes(drink)
-      ? document.getElementById('sweetSelect').value
-      : 'Regular';
-    if (NO_TEMP_DRINKS.includes(drink)) {
-      currentDrinks.push(drink);
-    } else {
-      const prefix = sweetness === 'Regular' ? '' : `${sweetness} `;
-      currentDrinks.push(`${prefix}${drink} (${temp})`);
-    }
+    currentDrinks.push(NO_TEMP_DRINKS.includes(drink) ? drink : `${drink} (${temp})`);
     renderCurrentDrinks();
   }
 
