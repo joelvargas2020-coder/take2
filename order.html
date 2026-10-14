@@ -187,13 +187,28 @@
 
   .drink-picker-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 14px;
   }
 
   select.drink-select {
-    flex: 1;
+    flex: 2 1 180px;
     min-width: 0;
+  }
+
+  select.temp-select {
+    flex: 1 1 100px;
+  }
+
+  select.temp-select[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 480px) {
+    .drink-picker-row button.add-btn {
+      flex: 1 1 100%;
+    }
   }
 
   button.add-btn {
@@ -497,24 +512,22 @@
       <div class="drink-picker-row">
         <select id="drinkSelect" class="drink-select">
           <optgroup data-i18n-label="coffeeGroup" label="Coffee — $5">
-            <option value="Vanilla (Hot)" data-drink="Vanilla (Hot)">Vanilla (Hot)</option>
-            <option value="Vanilla (Iced)" data-drink="Vanilla (Iced)">Vanilla (Iced)</option>
-            <option value="Mocha (Hot)" data-drink="Mocha (Hot)">Mocha (Hot)</option>
-            <option value="Mocha (Iced)" data-drink="Mocha (Iced)">Mocha (Iced)</option>
-            <option value="Caramel (Hot)" data-drink="Caramel (Hot)">Caramel (Hot)</option>
-            <option value="Caramel (Iced)" data-drink="Caramel (Iced)">Caramel (Iced)</option>
-            <option value="Sugar-Free Caramel (Hot)" data-drink="Sugar-Free Caramel (Hot)">Sugar-Free Caramel (Hot)</option>
-            <option value="Sugar-Free Caramel (Iced)" data-drink="Sugar-Free Caramel (Iced)">Sugar-Free Caramel (Iced)</option>
-            <option value="Cookie Butter (Hot)" data-drink="Cookie Butter (Hot)">Cookie Butter (Hot)</option>
-            <option value="Cookie Butter (Iced)" data-drink="Cookie Butter (Iced)">Cookie Butter (Iced)</option>
-            <option value="Maple (Hot)" data-drink="Maple (Hot)">Maple (Hot)</option>
-            <option value="Maple (Iced)" data-drink="Maple (Iced)">Maple (Iced)</option>
+            <option value="Vanilla" data-drink="Vanilla">Vanilla</option>
+            <option value="Mocha" data-drink="Mocha">Mocha</option>
+            <option value="Caramel" data-drink="Caramel">Caramel</option>
+            <option value="Sugar-Free Caramel" data-drink="Sugar-Free Caramel">Sugar-Free Caramel</option>
+            <option value="Cookie Butter" data-drink="Cookie Butter">Cookie Butter</option>
+            <option value="Maple" data-drink="Maple">Maple</option>
           </optgroup>
           <optgroup data-i18n-label="nonCaffeineGroup" label="Non-Caffeine — $4">
             <option value="Chocolate Milk" data-drink="Chocolate Milk">Chocolate Milk</option>
             <option value="Strawberry Milk" data-drink="Strawberry Milk">Strawberry Milk</option>
             <option value="Cookie Butter Milk" data-drink="Cookie Butter Milk">Cookie Butter Milk</option>
           </optgroup>
+        </select>
+        <select id="tempSelect" class="drink-select temp-select">
+          <option value="Hot" data-i18n="hot">Hot</option>
+          <option value="Iced" data-i18n="iced">Iced</option>
         </select>
         <button class="add-btn" onclick="addDrinkToCurrentOrder()" data-i18n="add">+ Add</button>
       </div>
@@ -630,6 +643,8 @@
       coffeeGroup: 'Coffee — $5',
       nonCaffeineGroup: 'Non-Caffeine — $4',
       add: '+ Add',
+      hot: 'Hot',
+      iced: 'Iced',
       submit: 'Submit Order',
       orderPlaced: 'Order placed!',
       orderReceived: '● Order Received',
@@ -659,6 +674,8 @@
       coffeeGroup: 'Café — $5',
       nonCaffeineGroup: 'Sin cafeína — $4',
       add: '+ Agregar',
+      hot: 'Caliente',
+      iced: 'Frío',
       submit: 'Enviar pedido',
       orderPlaced: '¡Pedido realizado!',
       orderReceived: '● Pedido recibido',
@@ -798,9 +815,20 @@
     renderShopStatus();
   });
 
+  const NO_TEMP_DRINKS = ['Chocolate Milk', 'Strawberry Milk', 'Cookie Butter Milk'];
+
+  function updateTempSelect() {
+    const drink = document.getElementById('drinkSelect').value;
+    document.getElementById('tempSelect').hidden = NO_TEMP_DRINKS.includes(drink);
+  }
+
+  document.getElementById('drinkSelect').addEventListener('change', updateTempSelect);
+  updateTempSelect();
+
   function addDrinkToCurrentOrder() {
-    const select = document.getElementById('drinkSelect');
-    currentDrinks.push(select.value);
+    const drink = document.getElementById('drinkSelect').value;
+    const temp = document.getElementById('tempSelect').value;
+    currentDrinks.push(NO_TEMP_DRINKS.includes(drink) ? drink : `${drink} (${temp})`);
     renderCurrentDrinks();
   }
 
