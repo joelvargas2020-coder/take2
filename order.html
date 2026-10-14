@@ -201,7 +201,12 @@
     flex: 1 1 100px;
   }
 
-  select.temp-select[hidden] {
+  select.sweet-select {
+    flex: 1 1 120px;
+  }
+
+  select.temp-select[hidden],
+  select.sweet-select[hidden] {
     display: none;
   }
 
@@ -515,7 +520,7 @@
             <option value="Vanilla" data-drink="Vanilla">Vanilla</option>
             <option value="Mocha" data-drink="Mocha">Mocha</option>
             <option value="Caramel" data-drink="Caramel">Caramel</option>
-            <option value="Sugar-Free Caramel" data-drink="Sugar-Free Caramel">Sugar-Free Caramel</option>
+            <option value="Brown Sugar" data-drink="Brown Sugar">Brown Sugar</option>
             <option value="Cookie Butter" data-drink="Cookie Butter">Cookie Butter</option>
             <option value="Maple" data-drink="Maple">Maple</option>
           </optgroup>
@@ -528,6 +533,10 @@
         <select id="tempSelect" class="drink-select temp-select">
           <option value="Hot" data-i18n="hot">Hot</option>
           <option value="Iced" data-i18n="iced">Iced</option>
+        </select>
+        <select id="sweetSelect" class="drink-select sweet-select">
+          <option value="Regular" data-i18n="regular">Regular</option>
+          <option value="Sugar-Free" data-i18n="sugarFree">Sugar-Free</option>
         </select>
         <button class="add-btn" onclick="addDrinkToCurrentOrder()" data-i18n="add">+ Add</button>
       </div>
@@ -554,7 +563,7 @@
     <div class="menu-row">
       <div>
         <div class="menu-item" data-drink="Vanilla">Vanilla</div>
-        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
+        <div class="menu-note" data-i18n="hotOrIcedSugarFree">hot or iced (iced topped with whip) · sugar-free available</div>
       </div>
     </div>
     <div class="menu-row">
@@ -566,13 +575,13 @@
     <div class="menu-row">
       <div>
         <div class="menu-item" data-drink="Caramel">Caramel</div>
-        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
+        <div class="menu-note" data-i18n="hotOrIcedSugarFree">hot or iced (iced topped with whip) · sugar-free available</div>
       </div>
     </div>
     <div class="menu-row">
       <div>
-        <div class="menu-item" data-drink="Sugar-Free Caramel">Sugar-Free Caramel</div>
-        <div class="menu-note" data-i18n="hotOrIced">hot or iced (iced topped with whip)</div>
+        <div class="menu-item" data-drink="Brown Sugar">Brown Sugar</div>
+        <div class="menu-note" data-i18n="hotOrIcedSugarFree">hot or iced (iced topped with whip) · sugar-free available</div>
       </div>
     </div>
     <div class="menu-row">
@@ -645,6 +654,8 @@
       add: '+ Add',
       hot: 'Hot',
       iced: 'Iced',
+      regular: 'Regular',
+      sugarFree: 'Sugar-Free',
       submit: 'Submit Order',
       orderPlaced: 'Order placed!',
       orderReceived: '● Order Received',
@@ -655,6 +666,7 @@
       coffee: 'Coffee',
       nonCaffeine: 'Non-Caffeine',
       hotOrIced: 'hot or iced (iced topped with whip)',
+      hotOrIcedSugarFree: 'hot or iced (iced topped with whip) · sugar-free available',
       liveQueue: 'Live Queue',
       noOrders: 'No orders right now',
       inQueue: 'IN QUEUE',
@@ -676,6 +688,8 @@
       add: '+ Agregar',
       hot: 'Caliente',
       iced: 'Frío',
+      regular: 'Regular',
+      sugarFree: 'Sin azúcar',
       submit: 'Enviar pedido',
       orderPlaced: '¡Pedido realizado!',
       orderReceived: '● Pedido recibido',
@@ -686,6 +700,7 @@
       coffee: 'Café',
       nonCaffeine: 'Sin cafeína',
       hotOrIced: 'caliente o frío (el frío lleva crema batida)',
+      hotOrIcedSugarFree: 'caliente o frío (el frío lleva crema batida) · disponible sin azúcar',
       liveQueue: 'Fila en vivo',
       noOrders: 'No hay pedidos por ahora',
       inQueue: 'EN FILA',
@@ -699,7 +714,7 @@
     'Vanilla': 'Vainilla',
     'Mocha': 'Moca',
     'Caramel': 'Caramelo',
-    'Sugar-Free Caramel': 'Caramelo sin azúcar',
+    'Brown Sugar': 'Azúcar morena',
     'Cookie Butter': 'Cookie Butter',
     'Maple': 'Maple',
     'Chocolate Milk': 'Leche con chocolate',
@@ -722,11 +737,19 @@
     return TEXT[lang][key];
   }
 
+  function baseLabel(base) {
+    if (base.startsWith('Sugar-Free ')) {
+      const flavor = base.slice('Sugar-Free '.length);
+      return `${DRINKS_ES[flavor] || flavor} sin azúcar`;
+    }
+    return DRINKS_ES[base] || base;
+  }
+
   function drinkLabel(name) {
     if (lang === 'en') return name;
     const m = /^(.*) \((Hot|Iced)\)$/.exec(name);
-    if (m) return `${DRINKS_ES[m[1]] || m[1]} (${TEMPS_ES[m[2]]})`;
-    return DRINKS_ES[name] || name;
+    if (m) return `${baseLabel(m[1])} (${TEMPS_ES[m[2]]})`;
+    return baseLabel(name);
   }
 
   function drinkList(drinks) {
@@ -816,19 +839,27 @@
   });
 
   const NO_TEMP_DRINKS = ['Chocolate Milk', 'Strawberry Milk', 'Cookie Butter Milk'];
+  const SUGAR_FREE_DRINKS = ['Vanilla', 'Caramel', 'Brown Sugar'];
 
-  function updateTempSelect() {
+  function updateOptionSelects() {
     const drink = document.getElementById('drinkSelect').value;
     document.getElementById('tempSelect').hidden = NO_TEMP_DRINKS.includes(drink);
+    document.getElementById('sweetSelect').hidden = !SUGAR_FREE_DRINKS.includes(drink);
   }
 
-  document.getElementById('drinkSelect').addEventListener('change', updateTempSelect);
-  updateTempSelect();
+  document.getElementById('drinkSelect').addEventListener('change', updateOptionSelects);
+  updateOptionSelects();
 
   function addDrinkToCurrentOrder() {
     const drink = document.getElementById('drinkSelect').value;
     const temp = document.getElementById('tempSelect').value;
-    currentDrinks.push(NO_TEMP_DRINKS.includes(drink) ? drink : `${drink} (${temp})`);
+    const sugarFree = SUGAR_FREE_DRINKS.includes(drink)
+      && document.getElementById('sweetSelect').value === 'Sugar-Free';
+    if (NO_TEMP_DRINKS.includes(drink)) {
+      currentDrinks.push(drink);
+    } else {
+      currentDrinks.push(`${sugarFree ? 'Sugar-Free ' : ''}${drink} (${temp})`);
+    }
     renderCurrentDrinks();
   }
 
