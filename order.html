@@ -18,8 +18,6 @@
     --gold: #C98A2C;
     --green: #4F8B62;
     --green-dark: #3E6E4E;
-    --iced: #4E7D8C;
-    --iced-dark: #3B6270;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -158,14 +156,16 @@
     margin-bottom: 18px;
   }
 
-  .panel.disabled .picker,
+  .panel.disabled select,
   .panel.disabled input,
+  .panel.disabled .add-btn,
   .panel.disabled .submit-btn {
     opacity: 0.4;
     pointer-events: none;
   }
 
-  input.name-input {
+  input.name-input,
+  select.drink-select {
     font-family: 'Inter', sans-serif;
     font-size: 16px;
     padding: 14px 14px;
@@ -185,142 +185,29 @@
     margin-bottom: 12px;
   }
 
-  .picker-heading {
-    font-family: 'DM Serif Display', serif;
-    font-size: 18px;
-    color: var(--accent-dark);
-    margin: 6px 0 10px;
-  }
-
-  .picker-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .drink-tile {
-    position: relative;
+  .drink-picker-row {
     display: flex;
-    flex-direction: column;
     gap: 10px;
-    background: var(--bg);
-    border: 1.5px solid var(--line);
-    border-radius: 14px;
-    padding: 12px;
+    margin-bottom: 14px;
   }
 
-  .tile-name {
-    font-size: 15.5px;
-    font-weight: 600;
-    color: var(--ink);
-    line-height: 1.25;
-  }
-
-  .tile-temps {
-    display: flex;
-    gap: 6px;
-    margin-top: auto;
-  }
-
-  button.temp-btn {
-    position: relative;
+  select.drink-select {
     flex: 1;
+    min-width: 0;
+  }
+
+  button.add-btn {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
-    min-height: 44px;
+    padding: 14px 18px;
+    min-height: 50px;
     border-radius: 10px;
-    border: 1.5px solid;
-    background: var(--panel);
-    cursor: pointer;
-  }
-
-  button.temp-btn.hot {
-    border-color: var(--accent);
-    color: var(--accent-dark);
-  }
-
-  button.temp-btn.iced {
-    border-color: var(--iced);
-    color: var(--iced-dark);
-  }
-
-  button.temp-btn.hot.selected {
-    background: var(--accent);
+    border: none;
+    background: var(--gold);
     color: #fff;
-  }
-
-  button.temp-btn.iced.selected {
-    background: var(--iced);
-    color: #fff;
-  }
-
-  button.drink-tile.single {
-    font-family: 'Inter', sans-serif;
-    text-align: left;
-    min-height: 92px;
-    justify-content: space-between;
     cursor: pointer;
-  }
-
-  button.drink-tile.single.selected {
-    border-color: var(--gold);
-    background: rgba(201, 138, 44, 0.12);
-  }
-
-  .tile-add {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--gold);
-  }
-
-  .count-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 6px;
-    border-radius: 11px;
-    background: var(--ink);
-    color: var(--bg);
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  button.temp-btn:active,
-  button.drink-tile.single:active {
-    transform: scale(0.96);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    button.temp-btn:active,
-    button.drink-tile.single:active {
-      transform: none;
-    }
-  }
-
-  .order-summary {
-    border-top: 1px solid var(--line);
-    padding-top: 14px;
-  }
-
-  .order-summary-label {
-    font-size: 12.5px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .order-empty {
-    font-size: 14.5px;
-    color: var(--muted);
+    white-space: nowrap;
   }
 
   .current-drinks {
@@ -607,11 +494,31 @@
       <div class="name-row">
         <input type="text" id="nameInput" class="name-input" data-i18n-placeholder="yourName" placeholder="Your name">
       </div>
-      <div class="picker" id="drinkPicker"></div>
-      <div class="order-summary">
-        <div class="order-summary-label" data-i18n="yourOrder">Your order</div>
-        <div class="current-drinks" id="currentDrinks"></div>
+      <div class="drink-picker-row">
+        <select id="drinkSelect" class="drink-select">
+          <optgroup data-i18n-label="coffeeGroup" label="Coffee — $5">
+            <option value="Vanilla (Hot)" data-drink="Vanilla (Hot)">Vanilla (Hot)</option>
+            <option value="Vanilla (Iced)" data-drink="Vanilla (Iced)">Vanilla (Iced)</option>
+            <option value="Mocha (Hot)" data-drink="Mocha (Hot)">Mocha (Hot)</option>
+            <option value="Mocha (Iced)" data-drink="Mocha (Iced)">Mocha (Iced)</option>
+            <option value="Caramel (Hot)" data-drink="Caramel (Hot)">Caramel (Hot)</option>
+            <option value="Caramel (Iced)" data-drink="Caramel (Iced)">Caramel (Iced)</option>
+            <option value="Sugar-Free Caramel (Hot)" data-drink="Sugar-Free Caramel (Hot)">Sugar-Free Caramel (Hot)</option>
+            <option value="Sugar-Free Caramel (Iced)" data-drink="Sugar-Free Caramel (Iced)">Sugar-Free Caramel (Iced)</option>
+            <option value="Cookie Butter (Hot)" data-drink="Cookie Butter (Hot)">Cookie Butter (Hot)</option>
+            <option value="Cookie Butter (Iced)" data-drink="Cookie Butter (Iced)">Cookie Butter (Iced)</option>
+            <option value="Maple (Hot)" data-drink="Maple (Hot)">Maple (Hot)</option>
+            <option value="Maple (Iced)" data-drink="Maple (Iced)">Maple (Iced)</option>
+          </optgroup>
+          <optgroup data-i18n-label="nonCaffeineGroup" label="Non-Caffeine — $4">
+            <option value="Chocolate Milk" data-drink="Chocolate Milk">Chocolate Milk</option>
+            <option value="Strawberry Milk" data-drink="Strawberry Milk">Strawberry Milk</option>
+            <option value="Cookie Butter Milk" data-drink="Cookie Butter Milk">Cookie Butter Milk</option>
+          </optgroup>
+        </select>
+        <button class="add-btn" onclick="addDrinkToCurrentOrder()" data-i18n="add">+ Add</button>
       </div>
+      <div class="current-drinks" id="currentDrinks"></div>
       <button class="submit-btn" id="submitBtn" onclick="submitOrder()" data-i18n="submit">Submit Order</button>
     </div>
 
@@ -723,10 +630,6 @@
       coffeeGroup: 'Coffee — $5',
       nonCaffeineGroup: 'Non-Caffeine — $4',
       add: '+ Add',
-      hot: 'Hot',
-      iced: 'Iced',
-      yourOrder: 'Your order',
-      tapToAdd: 'Tap a drink above to add it',
       submit: 'Submit Order',
       orderPlaced: 'Order placed!',
       orderReceived: '● Order Received',
@@ -756,10 +659,6 @@
       coffeeGroup: 'Café — $5',
       nonCaffeineGroup: 'Sin cafeína — $4',
       add: '+ Agregar',
-      hot: 'Caliente',
-      iced: 'Frío',
-      yourOrder: 'Tu pedido',
-      tapToAdd: 'Toca una bebida para agregarla',
       submit: 'Enviar pedido',
       orderPlaced: '¡Pedido realizado!',
       orderReceived: '● Pedido recibido',
@@ -831,6 +730,7 @@
     document.title = t('pageTitle');
     document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+    document.querySelectorAll('[data-i18n-label]').forEach((el) => { el.label = t(el.dataset.i18nLabel); });
     document.querySelectorAll('[data-drink]').forEach((el) => { el.textContent = drinkLabel(el.dataset.drink); });
     document.querySelectorAll('.lang-toggle button').forEach((btn) => {
       const active = btn.dataset.lang === lang;
@@ -898,68 +798,10 @@
     renderShopStatus();
   });
 
-  const MENU = [
-    { heading: 'coffeeGroup', temps: ['Hot', 'Iced'], drinks: ['Vanilla', 'Mocha', 'Caramel', 'Sugar-Free Caramel', 'Cookie Butter', 'Maple'] },
-    { heading: 'nonCaffeineGroup', temps: null, drinks: ['Chocolate Milk', 'Strawberry Milk', 'Cookie Butter Milk'] },
-  ];
-
-  function addDrink(drink) {
-    currentDrinks.push(drink);
+  function addDrinkToCurrentOrder() {
+    const select = document.getElementById('drinkSelect');
+    currentDrinks.push(select.value);
     renderCurrentDrinks();
-  }
-
-  function pickerButton(className, drink, ...content) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = className;
-    btn.append(...content);
-    const count = currentDrinks.filter((d) => d === drink).length;
-    if (count) {
-      btn.classList.add('selected');
-      const badge = document.createElement('span');
-      badge.className = 'count-badge';
-      badge.textContent = count;
-      btn.append(badge);
-    }
-    btn.setAttribute('aria-label', count ? `${drinkLabel(drink)} (${count})` : drinkLabel(drink));
-    btn.addEventListener('click', () => addDrink(drink));
-    return btn;
-  }
-
-  function textEl(className, text) {
-    const el = document.createElement('span');
-    el.className = className;
-    el.textContent = text;
-    return el;
-  }
-
-  function renderPicker() {
-    const picker = document.getElementById('drinkPicker');
-    picker.replaceChildren();
-    MENU.forEach((section) => {
-      const heading = document.createElement('div');
-      heading.className = 'picker-heading';
-      heading.textContent = t(section.heading);
-      const grid = document.createElement('div');
-      grid.className = 'picker-grid';
-      section.drinks.forEach((base) => {
-        if (section.temps) {
-          const tile = document.createElement('div');
-          tile.className = 'drink-tile';
-          const temps = document.createElement('div');
-          temps.className = 'tile-temps';
-          section.temps.forEach((temp) => {
-            const key = temp.toLowerCase();
-            temps.append(pickerButton(`temp-btn ${key}`, `${base} (${temp})`, t(key)));
-          });
-          tile.append(textEl('tile-name', drinkLabel(base)), temps);
-          grid.append(tile);
-        } else {
-          grid.append(pickerButton('drink-tile single', base, textEl('tile-name', drinkLabel(base)), textEl('tile-add', t('add'))));
-        }
-      });
-      picker.append(heading, grid);
-    });
   }
 
   function removeDrinkFromCurrent(index) {
@@ -968,14 +810,8 @@
   }
 
   function renderCurrentDrinks() {
-    renderPicker();
-    document.getElementById('submitBtn').disabled = currentDrinks.length === 0;
     const box = document.getElementById('currentDrinks');
     box.replaceChildren();
-    if (currentDrinks.length === 0) {
-      box.append(textEl('order-empty', t('tapToAdd')));
-      return;
-    }
     currentDrinks.forEach((drink, index) => {
       const chip = document.createElement('div');
       chip.className = 'drink-chip';
@@ -1110,10 +946,10 @@
 
   applyStaticText();
   renderShopStatus();
-  renderCurrentDrinks();
   renderBoard();
 
   window.setLanguage = setLanguage;
+  window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
   window.submitOrder = submitOrder;
   window.placeAnother = placeAnother;
 </script>
