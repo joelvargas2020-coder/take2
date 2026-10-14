@@ -622,6 +622,7 @@
       pageTitle: 'ADV Coffee — Order',
       tagline: 'Order Ahead',
       takingOrders: '● Taking Orders',
+      takingOrdersUntil: (time) => `● Taking Orders until ${time}`,
       closed: '● Closed',
       closedBanner: 'Currently not accepting orders',
       placeYourOrder: 'Place Your Order',
@@ -650,6 +651,7 @@
       pageTitle: 'ADV Coffee — Pedido',
       tagline: 'Ordena por adelantado',
       takingOrders: '● Aceptando pedidos',
+      takingOrdersUntil: (time) => `● Aceptando pedidos hasta ${time.startsWith('1:') ? 'la' : 'las'} ${time}`,
       closed: '● Cerrado',
       closedBanner: 'Por el momento no estamos aceptando pedidos',
       placeYourOrder: 'Haz tu pedido',
@@ -716,6 +718,8 @@
 
   let currentDrinks = [];
   let shopOpen = true;
+  let openFlag = true;
+  let closeAt = null;
   let currentOrderId = null;
   let allOrders = [];
   let announcement = '';
@@ -736,14 +740,25 @@
   }
 
   function renderShopStatus() {
+    const pastClose = closeAt !== null && Date.now() >= closeAt;
+    shopOpen = openFlag && !pastClose;
     const banner = document.getElementById('closedBanner');
     const panel = document.getElementById('orderPanel');
     const pill = document.getElementById('statusPill');
     banner.style.display = shopOpen ? 'none' : 'block';
     panel.classList.toggle('disabled', !shopOpen);
-    pill.textContent = shopOpen ? t('takingOrders') : t('closed');
+    if (!shopOpen) {
+      pill.textContent = t('closed');
+    } else if (closeAt !== null) {
+      const time = new Date(closeAt).toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US', { hour: 'numeric', minute: '2-digit' });
+      pill.textContent = t('takingOrdersUntil')(time);
+    } else {
+      pill.textContent = t('takingOrders');
+    }
     pill.classList.toggle('closed', !shopOpen);
   }
+
+  setInterval(renderShopStatus, 15000);
 
   function renderAnnouncement() {
     const banner = document.getElementById('announcementBanner');
@@ -777,8 +792,9 @@
   });
 
   onSnapshot(shopStatusRef, (snap) => {
-    const data = snap.data();
-    shopOpen = !data || data.open !== false;
+    const data = snap.data() || {};
+    openFlag = data.open !== false;
+    closeAt = typeof data.closeAt === 'number' ? data.closeAt : null;
     renderShopStatus();
   });
 

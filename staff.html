@@ -377,6 +377,12 @@
     margin-bottom: 12px;
   }
 
+  .close-time-error {
+    color: var(--accent-dark);
+    font-size: 13.5px;
+    margin-top: -4px;
+  }
+
   button.preset-btn {
     font-family: 'Inter', sans-serif;
     font-size: 15px;
@@ -578,6 +584,19 @@
     </div>
   </div>
 
+  <div class="panel">
+    <div class="panel-title">
+      <span>Closing Time</span>
+      <button class="clear-btn" id="cancelCloseBtn" onclick="cancelCloseTime()" hidden>Cancel</button>
+    </div>
+    <div class="announce-current empty" id="closeTimeCurrent">No closing time set</div>
+    <div class="drink-picker-row">
+      <input type="time" id="closeTimeInput" class="name-input">
+      <button class="add-btn" onclick="setCloseTime()">Set</button>
+    </div>
+    <div class="close-time-error" id="closeTimeError" hidden>That time has already passed today. Pick a later time.</div>
+  </div>
+
   <div class="menu-section">
     <div class="menu-heading">
       Coffee
@@ -672,10 +691,59 @@
   let completed = [];
   let currentDrinks = [];
   let shopOpen = true;
+  let openFlag = true;
+  let closeAt = null;
+
+  function upcomingCloseAt() {
+    return closeAt !== null && closeAt > Date.now() ? closeAt : null;
+  }
+
+  function clockTime(ms) {
+    return new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
 
   function toggleShopStatus() {
-    setDoc(shopStatusRef, { open: !shopOpen }, { merge: true });
+    setDoc(shopStatusRef, { open: !shopOpen, closeAt: upcomingCloseAt() }, { merge: true });
   }
+
+  function setCloseTime() {
+    const value = document.getElementById('closeTimeInput').value;
+    if (!value) return;
+    const [hours, minutes] = value.split(':').map(Number);
+    const target = new Date();
+    target.setHours(hours, minutes, 0, 0);
+    const error = document.getElementById('closeTimeError');
+    if (target.getTime() <= Date.now()) {
+      error.hidden = false;
+      return;
+    }
+    error.hidden = true;
+    setDoc(shopStatusRef, { closeAt: target.getTime() }, { merge: true });
+    document.getElementById('closeTimeInput').value = '';
+  }
+
+  function cancelCloseTime() {
+    setDoc(shopStatusRef, { closeAt: null }, { merge: true });
+  }
+
+  function refreshShopStatus() {
+    const pastClose = closeAt !== null && Date.now() >= closeAt;
+    if (pastClose) {
+      setDoc(shopStatusRef, { open: false, closeAt: null }, { merge: true });
+    }
+    shopOpen = openFlag && !pastClose;
+    updateStatusUI();
+
+    const upcoming = upcomingCloseAt();
+    const current = document.getElementById('closeTimeCurrent');
+    current.textContent = upcoming
+      ? `Orders close automatically at ${clockTime(upcoming)}`
+      : 'No closing time set';
+    current.classList.toggle('empty', !upcoming);
+    document.getElementById('cancelCloseBtn').hidden = !upcoming;
+  }
+
+  setInterval(refreshShopStatus, 15000);
 
   function submitLockPassword() {
     const entered = document.getElementById('lockPasswordInput').value;
@@ -713,7 +781,8 @@
     const panel = document.getElementById('orderPanel');
 
     if (shopOpen) {
-      btn.textContent = '● Taking Orders';
+      const upcoming = upcomingCloseAt();
+      btn.textContent = upcoming ? `● Taking Orders until ${clockTime(upcoming)}` : '● Taking Orders';
       btn.classList.remove('closed');
       banner.style.display = 'none';
       panel.classList.remove('disabled');
@@ -748,9 +817,14 @@
   });
 
   onSnapshot(shopStatusRef, (snap) => {
-    const data = snap.data();
-    shopOpen = !data || data.open !== false;
-    updateStatusUI();
+    const data = snap.data() || {};
+    openFlag = data.open !== false;
+    closeAt = typeof data.closeAt === 'number' ? data.closeAt : null;
+    refreshShopStatus();
+  });
+
+  document.getElementById('closeTimeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') setCloseTime();
   });
 
   document.getElementById('lockPasswordInput').addEventListener('keydown', (e) => {
@@ -871,6 +945,8 @@
   window.lockStaff = lockStaff;
   window.setAnnouncement = setAnnouncement;
   window.postCustomAnnouncement = postCustomAnnouncement;
+  window.setCloseTime = setCloseTime;
+  window.cancelCloseTime = cancelCloseTime;
   window.addDrinkToCurrentOrder = addDrinkToCurrentOrder;
   window.removeDrinkFromCurrent = removeDrinkFromCurrent;
   window.submitOrder = submitOrder;
