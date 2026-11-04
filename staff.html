@@ -389,6 +389,74 @@
     margin-bottom: 12px;
   }
 
+  .group-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .group-row:last-child {
+    border-bottom: none;
+  }
+
+  .group-info {
+    flex: 1 1 160px;
+  }
+
+  .group-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .group-state {
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  .group-state.open {
+    color: var(--green-dark);
+  }
+
+  .group-state.closed {
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  input.name-input.group-time {
+    flex: 0 0 140px;
+    width: 140px;
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+
+  button.group-toggle {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 44px;
+    min-width: 110px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  button.group-toggle:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  button.group-toggle.reopen {
+    border-color: var(--green);
+    color: var(--green-dark);
+  }
+
   .close-time-error {
     color: var(--accent-dark);
     font-size: 13.5px;
@@ -621,6 +689,12 @@
     <div class="close-time-error" id="closeTimeError" hidden>That time has already passed today. Pick a later time.</div>
   </div>
 
+  <div class="panel">
+    <div class="panel-title">Team Hours</div>
+    <div class="announce-label">Each team can order until its time, every day. Clear a time for no cutoff.</div>
+    <div class="group-list" id="groupList"></div>
+  </div>
+
   <div class="menu-section">
     <div class="menu-heading">
       Coffee
@@ -767,7 +841,99 @@
     document.getElementById('cancelCloseBtn').hidden = !upcoming;
   }
 
-  setInterval(refreshShopStatus, 15000);
+  const GROUPS = [
+    { id: 'media', label: 'Media Staff', defaultClose: '18:30' },
+    { id: 'teachers', label: 'Teachers', defaultClose: '18:45' },
+    { id: 'ushers', label: 'Ushers', defaultClose: '19:00' },
+    { id: 'parking', label: 'Parking Staff', defaultClose: '19:00' },
+  ];
+  const GROUP_LABELS = Object.fromEntries(GROUPS.map((g) => [g.id, g.label]));
+  const groupConfig = {};
+  const groupRows = {};
+
+  function groupRef(id) {
+    return doc(db, 'shop', `group_${id}`);
+  }
+
+  function groupCutoff(group) {
+    const cfg = groupConfig[group.id] || {};
+    return typeof cfg.closeTime === 'string' ? cfg.closeTime : group.defaultClose;
+  }
+
+  function cutoffMs(hhmm) {
+    const [hours, minutes] = hhmm.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date.getTime();
+  }
+
+  function buildGroupList() {
+    const list = document.getElementById('groupList');
+    GROUPS.forEach((group) => {
+      const row = document.createElement('div');
+      row.className = 'group-row';
+      const info = document.createElement('div');
+      info.className = 'group-info';
+      const state = textDiv('group-state', '');
+      info.append(textDiv('group-name', group.label), state);
+
+      const time = document.createElement('input');
+      time.type = 'time';
+      time.className = 'name-input group-time';
+      time.setAttribute('aria-label', `${group.label} closing time`);
+      time.addEventListener('change', () => {
+        setDoc(groupRef(group.id), { closeTime: time.value }, { merge: true });
+      });
+
+      const toggle = document.createElement('button');
+      toggle.className = 'group-toggle';
+      toggle.addEventListener('click', () => {
+        const closedByStaff = (groupConfig[group.id] || {}).open === false;
+        setDoc(groupRef(group.id), { open: closedByStaff }, { merge: true });
+      });
+
+      row.append(info, time, toggle);
+      list.append(row);
+      groupRows[group.id] = { state, time, toggle };
+    });
+  }
+
+  function updateGroupList() {
+    GROUPS.forEach((group) => {
+      const { state, time, toggle } = groupRows[group.id];
+      const closedByStaff = (groupConfig[group.id] || {}).open === false;
+      const cutoff = groupCutoff(group);
+      const pastCutoff = cutoff && Date.now() >= cutoffMs(cutoff);
+      if (closedByStaff) {
+        state.textContent = 'Closed by staff';
+      } else if (pastCutoff) {
+        state.textContent = `Closed (after ${clockTime(cutoffMs(cutoff))}). Set a later time to reopen.`;
+      } else {
+        state.textContent = cutoff ? `Open until ${clockTime(cutoffMs(cutoff))}` : 'Open, no cutoff';
+      }
+      const open = !closedByStaff && !pastCutoff;
+      state.classList.toggle('open', open);
+      state.classList.toggle('closed', !open);
+      if (document.activeElement !== time) time.value = cutoff;
+      toggle.textContent = closedByStaff ? 'Reopen' : 'Close now';
+      toggle.classList.toggle('reopen', closedByStaff);
+      toggle.disabled = pastCutoff && !closedByStaff;
+    });
+  }
+
+  buildGroupList();
+  updateGroupList();
+  GROUPS.forEach((group) => {
+    onSnapshot(groupRef(group.id), (snap) => {
+      groupConfig[group.id] = snap.data() || {};
+      updateGroupList();
+    });
+  });
+
+  setInterval(() => {
+    refreshShopStatus();
+    updateGroupList();
+  }, 15000);
 
   function submitLockPassword() {
     const entered = document.getElementById('lockPasswordInput').value;
@@ -915,7 +1081,8 @@
     item.className = 'queue-item';
     const info = document.createElement('div');
     info.className = 'queue-info';
-    info.append(textDiv('queue-drink', `${order.name} — ${(order.drinks || []).join(', ')}`));
+    const team = order.group ? ` (${GROUP_LABELS[order.group] || order.group})` : '';
+    info.append(textDiv('queue-drink', `${order.name}${team} — ${(order.drinks || []).join(', ')}`));
     if (order.note) info.append(textDiv('queue-note', `Note: ${order.note}`));
     info.append(textDiv('queue-time', timeText));
     item.append(textDiv(markerClass, marker), info);
