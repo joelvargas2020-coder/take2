@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>ADV Coffee — Order</title>
+<script>
+  (function () {
+    var team = new URLSearchParams(location.search).get('team');
+    if (['teachers', 'parking', 'ushers', 'media'].indexOf(team) === -1) location.replace('team.html');
+  })();
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -128,47 +134,49 @@
     display: none;
   }
 
-  .group-hours {
+  .team-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     background: var(--panel);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 12px 16px;
+    padding: 14px 16px;
     margin-bottom: 16px;
   }
 
-  .group-hours-title {
-    font-size: 12.5px;
+  .team-bar-label {
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 6px;
   }
 
-  .group-hours-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    font-size: 15px;
-    padding: 4px 0;
-    color: var(--ink);
+  .team-bar-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent-dark);
+  }
+
+  .team-bar-hours {
+    font-size: 14px;
+    color: var(--green-dark);
     font-variant-numeric: tabular-nums;
   }
 
-  .group-hours-row.closed .group-hours-time {
+  .team-bar.closed .team-bar-hours {
     color: var(--accent-dark);
     font-weight: 600;
   }
 
-  .group-status {
-    font-size: 13.5px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  .group-status.error {
-    color: var(--accent-dark);
+  a.team-change {
+    font-size: 14px;
     font-weight: 600;
+    color: var(--accent-dark);
+    white-space: nowrap;
+    padding: 10px 0;
   }
 
   .closed-banner {
@@ -568,7 +576,14 @@
 
   <div class="announcement-banner" id="announcementBanner" hidden></div>
 
-  <div class="group-hours" id="groupHours"></div>
+  <div class="team-bar" id="teamBar">
+    <div>
+      <div class="team-bar-label" data-i18n="orderingAs">Ordering as</div>
+      <div class="team-bar-name" id="teamName"></div>
+      <div class="team-bar-hours" id="teamHours"></div>
+    </div>
+    <a class="team-change" href="team.html" data-i18n="changeTeam">Change team</a>
+  </div>
 
   <div class="closed-banner" id="closedBanner" data-i18n="closedBanner">Currently not accepting orders</div>
 
@@ -578,10 +593,6 @@
     <div class="order-form" id="orderForm">
       <div class="name-row">
         <input type="text" id="nameInput" class="name-input" data-i18n-placeholder="yourName" placeholder="Your name">
-      </div>
-      <div class="name-row">
-        <select id="groupSelect" class="drink-select" aria-label="Team / Equipo"></select>
-        <div class="group-status" id="groupStatus"></div>
       </div>
       <div class="drink-picker-row">
         <select id="drinkSelect" class="drink-select">
@@ -706,6 +717,32 @@
   const shopStatusRef = doc(db, 'shop', 'status');
   const announcementRef = doc(db, 'shop', 'announcement');
 
+  const GROUPS = [
+    { id: 'media', label: 'groupMedia', defaultClose: '18:30' },
+    { id: 'teachers', label: 'groupTeachers', defaultClose: '18:45' },
+    { id: 'ushers', label: 'groupUshers', defaultClose: '19:00' },
+    { id: 'parking', label: 'groupParking', defaultClose: '19:00' },
+  ];
+  const team = GROUPS.find((g) => g.id === new URLSearchParams(location.search).get('team')) || GROUPS[0];
+  let teamConfig = {};
+
+  function teamCutoff() {
+    return typeof teamConfig.closeTime === 'string' ? teamConfig.closeTime : team.defaultClose;
+  }
+
+  function cutoffDate(hhmm) {
+    const [hours, minutes] = hhmm.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  }
+
+  function teamOpen() {
+    if (teamConfig.open === false) return false;
+    const cutoff = teamCutoff();
+    return !cutoff || Date.now() < cutoffDate(cutoff).getTime();
+  }
+
   const LANG_KEY = 'advCoffeeLang';
 
   const TEXT = {
@@ -722,13 +759,10 @@
       groupTeachers: 'Teachers',
       groupUshers: 'Ushers',
       groupParking: 'Parking Staff',
-      chooseTeam: 'Choose your team',
-      teamHoursTitle: 'Ordering closes at',
-      closedWord: 'Closed',
-      openWord: 'Open',
-      teamClosesAt: (team, time) => `Ordering for ${team} closes at ${time}`,
-      teamClosed: (team) => `Ordering for ${team} is closed`,
-      pickTeamFirst: 'Choose your team to place an order',
+      orderingAs: 'Ordering as',
+      changeTeam: 'Change team',
+      teamClosesAt: (time) => `Orders close at ${time}`,
+      teamClosed: 'Ordering is closed for your team',
       notePlaceholder: 'Special requests (optional), e.g. sugar-free, lactose-free',
       noteLabel: 'Note',
       coffeeGroup: 'Coffee — $5',
@@ -766,13 +800,10 @@
       groupTeachers: 'Maestros',
       groupUshers: 'Ujieres',
       groupParking: 'Equipo de estacionamiento',
-      chooseTeam: 'Elige tu equipo',
-      teamHoursTitle: 'Hora límite para pedidos',
-      closedWord: 'Cerrado',
-      openWord: 'Abierto',
-      teamClosesAt: (team, time) => `Los pedidos para ${team} cierran a ${time.startsWith('1:') ? 'la' : 'las'} ${time}`,
-      teamClosed: (team) => `Los pedidos para ${team} están cerrados`,
-      pickTeamFirst: 'Elige tu equipo para hacer tu pedido',
+      orderingAs: 'Pidiendo como',
+      changeTeam: 'Cambiar equipo',
+      teamClosesAt: (time) => `Los pedidos cierran a ${time.startsWith('1:') ? 'la' : 'las'} ${time}`,
+      teamClosed: 'Los pedidos para tu equipo están cerrados',
       notePlaceholder: 'Peticiones especiales (opcional), ej.: sin azúcar, sin lactosa',
       noteLabel: 'Nota',
       coffeeGroup: 'Café — $5',
@@ -879,7 +910,7 @@
     const panel = document.getElementById('orderPanel');
     const pill = document.getElementById('statusPill');
     banner.style.display = shopOpen ? 'none' : 'block';
-    panel.classList.toggle('disabled', !shopOpen);
+    panel.classList.toggle('disabled', !shopOpen || !teamOpen());
     if (!shopOpen) {
       pill.textContent = t('closed');
     } else if (closeAt !== null) {
@@ -889,108 +920,29 @@
       pill.textContent = t('takingOrders');
     }
     pill.classList.toggle('closed', !shopOpen);
-  }
-
-  const GROUPS = [
-    { id: 'media', label: 'groupMedia', defaultClose: '18:30' },
-    { id: 'teachers', label: 'groupTeachers', defaultClose: '18:45' },
-    { id: 'ushers', label: 'groupUshers', defaultClose: '19:00' },
-    { id: 'parking', label: 'groupParking', defaultClose: '19:00' },
-  ];
-  const groupConfig = {};
-  let groupError = false;
-
-  function groupCutoff(group) {
-    const cfg = groupConfig[group.id] || {};
-    return typeof cfg.closeTime === 'string' ? cfg.closeTime : group.defaultClose;
-  }
-
-  function cutoffDate(hhmm) {
-    const [hours, minutes] = hhmm.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    return date;
-  }
-
-  function groupOpen(group) {
-    if ((groupConfig[group.id] || {}).open === false) return false;
-    const cutoff = groupCutoff(group);
-    return !cutoff || Date.now() < cutoffDate(cutoff).getTime();
+    renderTeam();
   }
 
   function formatClock(date) {
     return date.toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US', { hour: 'numeric', minute: '2-digit' });
   }
 
-  function renderGroupStatus() {
-    const el = document.getElementById('groupStatus');
-    const group = GROUPS.find((g) => g.id === document.getElementById('groupSelect').value);
-    el.classList.remove('error');
-    if (!group) {
-      el.textContent = groupError ? t('pickTeamFirst') : '';
-      el.classList.toggle('error', groupError);
-      return;
-    }
-    if (!groupOpen(group)) {
-      el.textContent = t('teamClosed')(t(group.label));
-      el.classList.add('error');
-      return;
-    }
-    const cutoff = groupCutoff(group);
-    el.textContent = cutoff ? t('teamClosesAt')(t(group.label), formatClock(cutoffDate(cutoff))) : '';
+  function renderTeam() {
+    const open = teamOpen();
+    const cutoff = teamCutoff();
+    document.getElementById('teamName').textContent = t(team.label);
+    document.getElementById('teamHours').textContent = !open
+      ? t('teamClosed')
+      : cutoff ? t('teamClosesAt')(formatClock(cutoffDate(cutoff))) : '';
+    document.getElementById('teamBar').classList.toggle('closed', !open);
   }
 
-  function renderGroups() {
-    const hours = document.getElementById('groupHours');
-    const title = document.createElement('div');
-    title.className = 'group-hours-title';
-    title.textContent = t('teamHoursTitle');
-    hours.replaceChildren(title);
-    GROUPS.forEach((group) => {
-      const open = groupOpen(group);
-      const cutoff = groupCutoff(group);
-      const row = document.createElement('div');
-      row.className = 'group-hours-row' + (open ? '' : ' closed');
-      const name = document.createElement('span');
-      name.textContent = t(group.label);
-      const time = document.createElement('span');
-      time.className = 'group-hours-time';
-      time.textContent = !open ? t('closedWord') : cutoff ? formatClock(cutoffDate(cutoff)) : t('openWord');
-      row.append(name, time);
-      hours.append(row);
-    });
-
-    const select = document.getElementById('groupSelect');
-    const chosen = select.value;
-    const placeholder = new Option(t('chooseTeam'), '');
-    placeholder.disabled = true;
-    select.replaceChildren(placeholder);
-    GROUPS.forEach((group) => {
-      const open = groupOpen(group);
-      const option = new Option(open ? t(group.label) : `${t(group.label)} — ${t('closedWord')}`, group.id);
-      option.disabled = !open;
-      select.append(option);
-    });
-    select.value = chosen;
-    renderGroupStatus();
-  }
-
-  document.getElementById('groupSelect').addEventListener('change', () => {
-    groupError = false;
-    renderGroupStatus();
-  });
-
-  GROUPS.forEach((group) => {
-    onSnapshot(doc(db, 'shop', `group_${group.id}`), (snap) => {
-      groupConfig[group.id] = snap.data() || {};
-      renderGroups();
-    });
-  });
-
-  setInterval(() => {
+  onSnapshot(doc(db, 'shop', `group_${team.id}`), (snap) => {
+    teamConfig = snap.data() || {};
     renderShopStatus();
-    renderGroups();
-  }, 15000);
+  });
+
+  setInterval(renderShopStatus, 15000);
 
   function renderAnnouncement() {
     const banner = document.getElementById('announcementBanner');
@@ -1014,7 +966,6 @@
     } catch (e) {}
     applyStaticText();
     renderShopStatus();
-    renderGroups();
     renderAnnouncement();
     renderCurrentDrinks();
     renderConfirmation();
@@ -1159,27 +1110,17 @@
   });
 
   async function submitOrder() {
-    if (!shopOpen) return;
+    if (!shopOpen || !teamOpen()) return;
     if (currentDrinks.length === 0) return;
-    const groupSelect = document.getElementById('groupSelect');
-    const group = GROUPS.find((g) => g.id === groupSelect.value);
-    if (!group) {
-      groupError = true;
-      renderGroupStatus();
-      groupSelect.focus();
-      return;
-    }
-    if (!groupOpen(group)) {
-      renderGroupStatus();
-      return;
-    }
+    const cutoff = teamCutoff();
+    const cutoffAt = cutoff ? cutoffDate(cutoff).getTime() : null;
     const nameInput = document.getElementById('nameInput');
     const name = nameInput.value.trim() || 'Guest';
     const drinks = [...currentDrinks];
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     const note = document.getElementById('noteInput').value.trim();
-    const orderRef = await addDoc(ordersCol, { name, group: group.id, drinks, note, status: 'ordered', orderedAt: new Date() });
+    const orderRef = await addDoc(ordersCol, { name, group: team.id, cutoffAt, drinks, note, status: 'ordered', orderedAt: new Date() });
     submitBtn.disabled = false;
     currentOrderId = orderRef.id;
 
@@ -1198,9 +1139,6 @@
     renderBoard();
     document.getElementById('nameInput').value = '';
     document.getElementById('noteInput').value = '';
-    document.getElementById('groupSelect').value = '';
-    groupError = false;
-    renderGroupStatus();
     document.getElementById('queuePositionNote').textContent = '';
     currentDrinks = [];
     renderCurrentDrinks();
@@ -1210,7 +1148,6 @@
 
   applyStaticText();
   renderShopStatus();
-  renderGroups();
   renderBoard();
 
   window.setLanguage = setLanguage;

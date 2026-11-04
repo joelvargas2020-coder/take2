@@ -306,9 +306,30 @@
   }
 
   .queue-time {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 3px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-tag {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+  }
+
+  .time-tag.on-time {
+    color: var(--green-dark);
+    background: rgba(79, 139, 98, 0.14);
+  }
+
+  .time-tag.late {
+    color: var(--accent-dark);
+    background: rgba(193, 80, 46, 0.14);
   }
 
   .tag {
@@ -1026,6 +1047,20 @@
     return timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  function submittedTime(timestamp) {
+    if (!timestamp) return '...';
+    return timestamp.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  }
+
+  function onTimeTag(order) {
+    if (typeof order.cutoffAt !== 'number' || !order.orderedAt) return null;
+    const onTime = order.orderedAt.toMillis() <= order.cutoffAt;
+    const tag = document.createElement('span');
+    tag.className = 'time-tag ' + (onTime ? 'on-time' : 'late');
+    tag.textContent = `${onTime ? 'On time' : 'Late'} · cutoff ${clockTime(order.cutoffAt)}`;
+    return tag;
+  }
+
   function addDrinkToCurrentOrder() {
     const select = document.getElementById('drinkSelect');
     currentDrinks.push(select.value);
@@ -1084,7 +1119,10 @@
     const team = order.group ? ` (${GROUP_LABELS[order.group] || order.group})` : '';
     info.append(textDiv('queue-drink', `${order.name}${team} — ${(order.drinks || []).join(', ')}`));
     if (order.note) info.append(textDiv('queue-note', `Note: ${order.note}`));
-    info.append(textDiv('queue-time', timeText));
+    const time = textDiv('queue-time', timeText);
+    const tag = onTimeTag(order);
+    if (tag) time.append(tag);
+    info.append(time);
     item.append(textDiv(markerClass, marker), info);
     return item;
   }
@@ -1100,7 +1138,7 @@
 
     completed.forEach((order) => {
       const item = orderItem(order, '✓', 'queue-check',
-        `Ordered ${formatTime(order.orderedAt)} · Done ${formatTime(order.completedAt)}`);
+        `Submitted ${submittedTime(order.orderedAt)} · Done ${formatTime(order.completedAt)}`);
       item.append(textDiv('tag tag-done', 'DONE'));
       list.append(item);
     });
@@ -1116,7 +1154,7 @@
     }
 
     queue.forEach((order, index) => {
-      const item = orderItem(order, String(index + 1), 'queue-position', `Added ${formatTime(order.orderedAt)}`);
+      const item = orderItem(order, String(index + 1), 'queue-position', `Submitted ${submittedTime(order.orderedAt)}`);
       const button = document.createElement('button');
       button.className = 'serve-btn';
       button.textContent = 'Mark Done';

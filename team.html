@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ADV Coffee — Choose Your Team</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #FBF3E9;
+    --panel: #FFFFFF;
+    --ink: #2C1B12;
+    --muted: #8A7060;
+    --line: #EADACA;
+    --accent: #C1502E;
+    --accent-dark: #9C3D22;
+    --gold: #C98A2C;
+    --green: #4F8B62;
+    --green-dark: #3E6E4E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 32px 16px 60px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .wrap {
+    max-width: 520px;
+    width: 100%;
+  }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  a.back-link {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 10px 0;
+  }
+
+  .lang-toggle {
+    display: flex;
+  }
+
+  .lang-toggle button {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    min-height: 44px;
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .lang-toggle button:first-child {
+    border-radius: 22px 0 0 22px;
+    border-right: none;
+  }
+
+  .lang-toggle button:last-child {
+    border-radius: 0 22px 22px 0;
+  }
+
+  .lang-toggle button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .shop-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    color: var(--accent-dark);
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .closed-banner {
+    text-align: center;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .closed-banner[hidden] {
+    display: none;
+  }
+
+  .teams {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .team-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 22px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 10px rgba(44, 27, 18, 0.04);
+  }
+
+  a.team-card:active {
+    transform: scale(0.98);
+  }
+
+  .team-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--accent-dark);
+  }
+
+  .team-hours {
+    font-size: 14px;
+    color: var(--green-dark);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .team-arrow {
+    font-size: 24px;
+    color: var(--gold);
+  }
+
+  .team-card.closed {
+    opacity: 0.55;
+  }
+
+  .team-card.closed .team-hours {
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  .team-card.closed .team-arrow {
+    visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.team-card:active {
+      transform: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top-row">
+    <a class="back-link" href="index.html" id="backLink">&larr; Back</a>
+    <div class="lang-toggle" role="group" aria-label="Language / Idioma">
+      <button type="button" data-lang="en">English</button>
+      <button type="button" data-lang="es">Español</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="shop-name">ADV Coffee</div>
+    <div class="tagline" id="tagline">Choose your team</div>
+  </header>
+
+  <div class="closed-banner" id="closedBanner" hidden>Currently not accepting orders</div>
+
+  <div class="teams" id="teamList"></div>
+</div>
+
+<script type="module">
+  import { firebaseConfig } from './firebase-config.js';
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+  import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const LANG_KEY = 'advCoffeeLang';
+
+  const TEXT = {
+    en: {
+      pageTitle: 'ADV Coffee — Choose Your Team',
+      back: '← Back',
+      tagline: 'Choose your team',
+      closedBanner: 'Currently not accepting orders',
+      teachers: 'Teachers',
+      parking: 'Parking Staff',
+      ushers: 'Ushers',
+      media: 'Media Staff',
+      until: (time) => `Ordering until ${time}`,
+      open: 'Ordering open',
+      closed: 'Closed',
+    },
+    es: {
+      pageTitle: 'ADV Coffee — Elige tu equipo',
+      back: '← Atrás',
+      tagline: 'Elige tu equipo',
+      closedBanner: 'Por el momento no estamos aceptando pedidos',
+      teachers: 'Maestros',
+      parking: 'Equipo de estacionamiento',
+      ushers: 'Ujieres',
+      media: 'Equipo de medios',
+      until: (time) => `Pedidos hasta ${time.startsWith('1:') ? 'la' : 'las'} ${time}`,
+      open: 'Pedidos abiertos',
+      closed: 'Cerrado',
+    },
+  };
+
+  const GROUPS = [
+    { id: 'teachers', defaultClose: '18:45' },
+    { id: 'parking', defaultClose: '19:00' },
+    { id: 'ushers', defaultClose: '19:00' },
+    { id: 'media', defaultClose: '18:30' },
+  ];
+
+  let lang = 'en';
+  try {
+    if (localStorage.getItem(LANG_KEY) === 'es') lang = 'es';
+  } catch (e) {}
+
+  const t = (key) => TEXT[lang][key];
+  const groupConfig = {};
+  let shop = {};
+
+  function cutoffDate(hhmm) {
+    const [hours, minutes] = hhmm.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  }
+
+  function groupCutoff(group) {
+    const cfg = groupConfig[group.id] || {};
+    return typeof cfg.closeTime === 'string' ? cfg.closeTime : group.defaultClose;
+  }
+
+  function shopOpen() {
+    const pastClose = typeof shop.closeAt === 'number' && Date.now() >= shop.closeAt;
+    return shop.open !== false && !pastClose;
+  }
+
+  function groupOpen(group) {
+    if ((groupConfig[group.id] || {}).open === false) return false;
+    const cutoff = groupCutoff(group);
+    return !cutoff || Date.now() < cutoffDate(cutoff).getTime();
+  }
+
+  function render() {
+    document.documentElement.lang = lang;
+    document.title = t('pageTitle');
+    document.getElementById('backLink').textContent = t('back');
+    document.getElementById('tagline').textContent = t('tagline');
+    const banner = document.getElementById('closedBanner');
+    banner.textContent = t('closedBanner');
+    banner.hidden = shopOpen();
+    document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+      const active = btn.dataset.lang === lang;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active);
+    });
+
+    const list = document.getElementById('teamList');
+    list.replaceChildren();
+    GROUPS.forEach((group) => {
+      const open = shopOpen() && groupOpen(group);
+      const card = document.createElement(open ? 'a' : 'div');
+      card.className = 'team-card' + (open ? '' : ' closed');
+      if (open) card.href = `order.html?team=${group.id}`;
+      else card.setAttribute('aria-disabled', 'true');
+
+      const info = document.createElement('div');
+      const name = document.createElement('div');
+      name.className = 'team-name';
+      name.textContent = t(group.id);
+      const hours = document.createElement('div');
+      hours.className = 'team-hours';
+      const cutoff = groupCutoff(group);
+      const time = cutoff
+        ? cutoffDate(cutoff).toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US', { hour: 'numeric', minute: '2-digit' })
+        : '';
+      hours.textContent = !open ? t('closed') : cutoff ? t('until')(time) : t('open');
+      info.append(name, hours);
+
+      const arrow = document.createElement('div');
+      arrow.className = 'team-arrow';
+      arrow.textContent = '›';
+      card.append(info, arrow);
+      list.append(card);
+    });
+  }
+
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      lang = btn.dataset.lang;
+      try {
+        localStorage.setItem(LANG_KEY, lang);
+      } catch (e) {}
+      render();
+    });
+  });
+
+  onSnapshot(doc(db, 'shop', 'status'), (snap) => {
+    shop = snap.data() || {};
+    render();
+  });
+
+  GROUPS.forEach((group) => {
+    onSnapshot(doc(db, 'shop', `group_${group.id}`), (snap) => {
+      groupConfig[group.id] = snap.data() || {};
+      render();
+    });
+  });
+
+  setInterval(render, 15000);
+  render();
+</script>
+
+</body>
+</html>
