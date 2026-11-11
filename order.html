@@ -1140,16 +1140,7 @@
   }
 
   function placeAnother() {
-    currentOrderId = null;
-    confirmation = null;
-    renderBoard();
-    document.getElementById('nameInput').value = '';
-    document.getElementById('noteInput').value = '';
-    document.getElementById('queuePositionNote').textContent = '';
-    currentDrinks = [];
-    renderCurrentDrinks();
-    document.getElementById('confirmation').classList.remove('visible');
-    document.getElementById('orderForm').classList.remove('hidden');
+    location.href = 'team.html';
   }
 
   applyStaticText();
