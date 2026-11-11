@@ -219,6 +219,8 @@
       parking: 'Parking Staff',
       ushers: 'Ushers',
       media: 'Media Staff',
+      singers: 'Singers',
+      other: 'Other',
       until: (time) => `Ordering until ${time}`,
       open: 'Ordering open',
       closed: 'Closed',
@@ -232,6 +234,8 @@
       parking: 'Equipo de estacionamiento',
       ushers: 'Ujieres',
       media: 'Equipo de medios',
+      singers: 'Cantantes',
+      other: 'Otro',
       until: (time) => `Pedidos hasta ${time.startsWith('1:') ? 'la' : 'las'} ${time}`,
       open: 'Pedidos abiertos',
       closed: 'Cerrado',
@@ -243,6 +247,8 @@
     { id: 'parking', defaultClose: '19:00' },
     { id: 'ushers', defaultClose: '19:00' },
     { id: 'media', defaultClose: '18:30' },
+    { id: 'singers', defaultClose: '18:15' },
+    { id: 'other', defaultClose: '' },
   ];
 
   let lang = 'en';

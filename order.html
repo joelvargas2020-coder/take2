@@ -7,7 +7,7 @@
 <script>
   (function () {
     var team = new URLSearchParams(location.search).get('team');
-    if (['teachers', 'parking', 'ushers', 'media'].indexOf(team) === -1) location.replace('team.html');
+    if (['teachers', 'parking', 'ushers', 'media', 'singers', 'other'].indexOf(team) === -1) location.replace('team.html');
   })();
 </script>
 <style>
@@ -718,10 +718,12 @@
   const announcementRef = doc(db, 'shop', 'announcement');
 
   const GROUPS = [
+    { id: 'singers', label: 'groupSingers', defaultClose: '18:15' },
     { id: 'media', label: 'groupMedia', defaultClose: '18:30' },
     { id: 'teachers', label: 'groupTeachers', defaultClose: '18:45' },
     { id: 'ushers', label: 'groupUshers', defaultClose: '19:00' },
     { id: 'parking', label: 'groupParking', defaultClose: '19:00' },
+    { id: 'other', label: 'groupOther', defaultClose: '' },
   ];
   const team = GROUPS.find((g) => g.id === new URLSearchParams(location.search).get('team')) || GROUPS[0];
   let teamConfig = {};
@@ -759,6 +761,8 @@
       groupTeachers: 'Teachers',
       groupUshers: 'Ushers',
       groupParking: 'Parking Staff',
+      groupSingers: 'Singers',
+      groupOther: 'Other',
       orderingAs: 'Ordering as',
       changeTeam: 'Change team',
       teamClosesAt: (time) => `Orders close at ${time}`,
@@ -800,6 +804,8 @@
       groupTeachers: 'Maestros',
       groupUshers: 'Ujieres',
       groupParking: 'Equipo de estacionamiento',
+      groupSingers: 'Cantantes',
+      groupOther: 'Otro',
       orderingAs: 'Pidiendo como',
       changeTeam: 'Cambiar equipo',
       teamClosesAt: (time) => `Los pedidos cierran a ${time.startsWith('1:') ? 'la' : 'las'} ${time}`,

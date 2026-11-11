@@ -863,10 +863,12 @@
   }
 
   const GROUPS = [
+    { id: 'singers', label: 'Singers', defaultClose: '18:15' },
     { id: 'media', label: 'Media Staff', defaultClose: '18:30' },
     { id: 'teachers', label: 'Teachers', defaultClose: '18:45' },
     { id: 'ushers', label: 'Ushers', defaultClose: '19:00' },
     { id: 'parking', label: 'Parking Staff', defaultClose: '19:00' },
+    { id: 'other', label: 'Other', defaultClose: '' },
   ];
   const GROUP_LABELS = Object.fromEntries(GROUPS.map((g) => [g.id, g.label]));
   const groupConfig = {};
