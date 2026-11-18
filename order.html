@@ -604,12 +604,12 @@
             <option value="Cookie Butter" data-drink="Cookie Butter">Cookie Butter</option>
             <option value="Maple" data-drink="Maple">Maple</option>
           </optgroup>
-          <optgroup data-i18n-label="teaGroup" label="Tea">
+          <optgroup data-i18n-label="teaGroup" label="Tea — $5">
             <option value="Matcha Tea" data-drink="Matcha Tea">Matcha Tea</option>
             <option value="Green Tea" data-drink="Green Tea">Green Tea</option>
             <option value="Tia Mimi's Tea" data-drink="Tia Mimi's Tea">Tia Mimi's Tea</option>
           </optgroup>
-          <optgroup data-i18n-label="nonCaffeineGroup" label="Non-Caffeine — $4">
+          <optgroup data-i18n-label="nonCaffeineGroup" label="Milks — $4">
             <option value="Chocolate Milk" data-drink="Chocolate Milk">Chocolate Milk</option>
             <option value="Strawberry Milk" data-drink="Strawberry Milk">Strawberry Milk</option>
             <option value="Cookie Butter Milk" data-drink="Cookie Butter Milk">Cookie Butter Milk</option>
@@ -686,6 +686,7 @@
   <div class="menu-section">
     <div class="menu-heading">
       <span data-i18n="tea">Tea</span>
+      <span class="menu-price">$5.00</span>
     </div>
     <div class="menu-row">
       <div>
@@ -709,7 +710,7 @@
 
   <div class="menu-section">
     <div class="menu-heading">
-      <span data-i18n="nonCaffeine">Non-Caffeine</span>
+      <span data-i18n="nonCaffeine">Milks</span>
       <span class="menu-price">$4.00</span>
     </div>
     <div class="menu-row">
@@ -799,8 +800,8 @@
       notePlaceholder: 'Special requests (optional), e.g. sugar-free, lactose-free',
       noteLabel: 'Note',
       coffeeGroup: 'Coffee — $5',
-      teaGroup: 'Tea',
-      nonCaffeineGroup: 'Non-Caffeine — $4',
+      teaGroup: 'Tea — $5',
+      nonCaffeineGroup: 'Milks — $4',
       add: '+ Add',
       hot: 'Hot',
       iced: 'Iced',
@@ -812,7 +813,7 @@
       ahead: (n) => `${n} order${n === 1 ? '' : 's'} ahead of you`,
       placeAnother: 'Place Another Order',
       coffee: 'Coffee',
-      nonCaffeine: 'Non-Caffeine',
+      nonCaffeine: 'Milks',
       tea: 'Tea',
       teaHotOrIced: 'hot or iced · made with honey',
       hotOrIced: 'hot or iced (iced topped with whip)',
@@ -845,8 +846,8 @@
       notePlaceholder: 'Peticiones especiales (opcional), ej.: sin azúcar, sin lactosa',
       noteLabel: 'Nota',
       coffeeGroup: 'Café — $5',
-      teaGroup: 'Té',
-      nonCaffeineGroup: 'Sin cafeína — $4',
+      teaGroup: 'Té — $5',
+      nonCaffeineGroup: 'Leches — $4',
       add: '+ Agregar',
       hot: 'Caliente',
       iced: 'Frío',
@@ -858,7 +859,7 @@
       ahead: (n) => (n === 1 ? '1 pedido antes que el tuyo' : `${n} pedidos antes que el tuyo`),
       placeAnother: 'Hacer otro pedido',
       coffee: 'Café',
-      nonCaffeine: 'Sin cafeína',
+      nonCaffeine: 'Leches',
       tea: 'Té',
       teaHotOrIced: 'caliente o frío · hecho con miel',
       hotOrIced: 'caliente o frío (el frío lleva crema batida)',
