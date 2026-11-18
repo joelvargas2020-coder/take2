@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adv-coffee-v4';
+const CACHE_NAME = 'adv-coffee-v5';
 const CACHED_URLS = [
   './index.html', './team.html', './staff.html', './order.html',
   './manifest.json', './icons/icon-192.png', './icons/icon-512.png'
